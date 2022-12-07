@@ -1,4 +1,7 @@
 ﻿using System.Text.RegularExpressions;
+using Azure.Identity;
+using Azure.ResourceManager;
+using Azure.ResourceManager.Resources;
 
 public class Parser
 {
@@ -20,6 +23,7 @@ public class Parser
 
             Console.WriteLine($"ProjectName: {projName}");
 
+            //Should be able to move a lot of this to a const dictionary
             if (csprojData.Contains("<Project Sdk=\"Microsoft.NET.Sdk.Web\">"))
             {
                 services.Add("WebApp");
@@ -62,9 +66,24 @@ public class Parser
             return 1;
         }
 
+        var client = new ArmClient(new AzureCliCredential());
+        SubscriptionResource subscription;
+
+        if (args.Length < 3)
+        {
+            subscription = await client.GetDefaultSubscriptionAsync();
+        }
+        else
+        {
+            var subs = client.GetSubscriptions();
+            subscription = subs.FirstOrDefault(x => x.Data.SubscriptionId == args[2]) ?? await client.GetDefaultSubscriptionAsync();
+        }
+
+        Console.WriteLine($"Using subscription: {subscription.Data.SubscriptionId}");
         Console.WriteLine($"Configs: {string.Join(" ",configs)}");
         Console.WriteLine($"Services: {string.Join(" ",services)}");
-        Console.WriteLine($"Completed Parsing Args {args[0]}.");
+        Console.WriteLine($"Completed Provisioning");
+
         return 0;
     }
 }

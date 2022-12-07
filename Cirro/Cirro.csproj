@@ -7,4 +7,14 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Remove="Azure.ResourceManager" />
+    <None Remove="Azure.Identity" />
+    <None Remove="Azure.ResourceManager.Resources" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Azure.ResourceManager" Version="1.3.2" />
+    <PackageReference Include="Azure.Identity" Version="1.8.0" />
+    <PackageReference Include="Azure.ResourceManager.Resources" Version="1.3.1" />
+  </ItemGroup>
 </Project>
