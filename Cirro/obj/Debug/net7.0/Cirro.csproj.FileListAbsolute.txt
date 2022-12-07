@@ -1,0 +1,15 @@
+/Users/philipedat/Projects/Cirro/Cirro/bin/Debug/net7.0/Cirro
+/Users/philipedat/Projects/Cirro/Cirro/bin/Debug/net7.0/Cirro.deps.json
+/Users/philipedat/Projects/Cirro/Cirro/bin/Debug/net7.0/Cirro.runtimeconfig.json
+/Users/philipedat/Projects/Cirro/Cirro/bin/Debug/net7.0/Cirro.dll
+/Users/philipedat/Projects/Cirro/Cirro/bin/Debug/net7.0/Cirro.pdb
+/Users/philipedat/Projects/Cirro/Cirro/obj/Debug/net7.0/Cirro.csproj.AssemblyReference.cache
+/Users/philipedat/Projects/Cirro/Cirro/obj/Debug/net7.0/Cirro.GeneratedMSBuildEditorConfig.editorconfig
+/Users/philipedat/Projects/Cirro/Cirro/obj/Debug/net7.0/Cirro.AssemblyInfoInputs.cache
+/Users/philipedat/Projects/Cirro/Cirro/obj/Debug/net7.0/Cirro.AssemblyInfo.cs
+/Users/philipedat/Projects/Cirro/Cirro/obj/Debug/net7.0/Cirro.csproj.CoreCompileInputs.cache
+/Users/philipedat/Projects/Cirro/Cirro/obj/Debug/net7.0/Cirro.dll
+/Users/philipedat/Projects/Cirro/Cirro/obj/Debug/net7.0/refint/Cirro.dll
+/Users/philipedat/Projects/Cirro/Cirro/obj/Debug/net7.0/Cirro.pdb
+/Users/philipedat/Projects/Cirro/Cirro/obj/Debug/net7.0/Cirro.genruntimeconfig.cache
+/Users/philipedat/Projects/Cirro/Cirro/obj/Debug/net7.0/ref/Cirro.dll
