@@ -1,21 +1,17 @@
 {
-  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
-  "contentVersion": "1.0.0.0",
-  "parameters": {
-    "globalResourceGroupName": {
-      "value": "__WEBAPPNAME__-Global"
-    },
-    "webAppName": {
-      "value": "__WEBAPPNAME__"
-    },
-    "appServicePlanName": {
-      "value": "Plan-__WEBAPPNAME__"
-    },
-    "linuxFxVersion": {
-      "value": "__LINUXVERSION__"
-    },
-    "services": {
-      "value": "__SERVICES__"
-    }
+  "globalResourceGroupName": {
+    "value": "__WEBAPPNAME__-Global"
+  },
+  "webAppName": {
+    "value": "__WEBAPPNAME__"
+  },
+  "appServicePlanName": {
+    "value": "Plan-__WEBAPPNAME__"
+  },
+  "linuxFxVersion": {
+    "value": "__LINUXVERSION__"
+  },
+  "services": {
+    "value": "__SERVICES__"
   }
 }

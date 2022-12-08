@@ -24,6 +24,7 @@
     },
     "resources": [
       {
+        "condition": "[contains(parameters('services'), 'WebApp')]",
         "type": "Microsoft.Web/serverfarms",
         "apiVersion": "2021-02-01",
         "name": "[variables('appServicePlanName')]",
@@ -37,6 +38,7 @@
         }
       },
       {
+        "condition": "[contains(parameters('services'), 'Cosmos')]",
         "name": "[toLower(concat(parameters('cosmosName'), uniqueString(resourceGroup().id)))]",
         "type": "Microsoft.DocumentDB/databaseAccounts",
         "apiVersion": "2019-12-12",
