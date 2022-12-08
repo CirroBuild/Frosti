@@ -1,0 +1,48 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+
+    "parameters": {
+      "globalResourceGroupName": {
+        "type": "string"
+      },
+      "webAppName": {
+        "type": "string"
+      },
+      "location": {
+        "type": "string",
+        "defaultValue": "[resourceGroup().location]"
+      },
+      "appServicePlanName": {
+        "type": "string"
+      },
+      "linuxFxVersion": {
+        "type": "string"
+      },
+      "services": {
+        "type": "array"
+      }
+    },
+    "variables": {
+      "regionalWebAppName": "[format('{0}-{1}', parameters('webAppName'), parameters('location'))]"
+    },
+    "resources": [
+      {
+        "type": "Microsoft.Web/sites",
+        "apiVersion": "2021-02-01",
+        "name": "[variables('regionalWebAppName')]",
+        "location": "[parameters('location')]",
+        "properties": {
+          "httpsOnly": true,
+          "serverFarmId": "[resourceId(parameters('globalResourceGroupName'), 'Microsoft.Web/serverfarms', parameters('appServicePlanName'))]",
+          "siteConfig": {
+            "linuxFxVersion": "[parameters('linuxFxVersion')]",
+            "minTlsVersion": "1.2"
+          }
+        },
+        "identity": {
+          "type": "SystemAssigned"
+        }
+      }
+    ]
+  }

@@ -1,0 +1,14 @@
+{
+  "webAppName": {
+    "value": "__WEBAPPNAME__"
+  },
+  "cosmosName": {
+    "value": "__COSMOSNAME__"
+  },
+  "webAppSku": {
+    "value": "__WEBAPPSKU__"
+  },
+  "services": {
+    "value": "__SERVICES__"
+  }
+}

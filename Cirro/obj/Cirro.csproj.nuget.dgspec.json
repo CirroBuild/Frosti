@@ -49,6 +49,10 @@
             "Azure.ResourceManager.Resources": {
               "target": "Package",
               "version": "[1.3.1, )"
+            },
+            "Newtonsoft.Json": {
+              "target": "Package",
+              "version": "[13.0.2, )"
             }
           },
           "imports": [

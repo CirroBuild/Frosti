@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "MZEqGJ5NJrUCd8SAKNuyKrIW6QTHcT4CZR7tHe0d8f+QhtNy0+CTzUFGMkrCzKc1grJguo/EeB3q7QYneWk/Rg==",
+  "dgSpecHash": "sLsuW2WOviFpNDvQqr8cVwSYH75vt4UAs7vaXia9X+jhW2OsNb/Qrmn1BwHrEfpeBpSaO22JEWGZedMNMQTgRw==",
   "success": true,
   "projectFilePath": "/Users/philipedat/Projects/Cirro/Cirro/Cirro.csproj",
   "expectedPackageFiles": [
@@ -13,6 +13,7 @@
     "/Users/philipedat/.nuget/packages/microsoft.identity.client.extensions.msal/2.23.0/microsoft.identity.client.extensions.msal.2.23.0.nupkg.sha512",
     "/Users/philipedat/.nuget/packages/microsoft.identitymodel.abstractions/6.18.0/microsoft.identitymodel.abstractions.6.18.0.nupkg.sha512",
     "/Users/philipedat/.nuget/packages/microsoft.netcore.platforms/5.0.0/microsoft.netcore.platforms.5.0.0.nupkg.sha512",
+    "/Users/philipedat/.nuget/packages/newtonsoft.json/13.0.2/newtonsoft.json.13.0.2.nupkg.sha512",
     "/Users/philipedat/.nuget/packages/system.diagnostics.diagnosticsource/4.6.0/system.diagnostics.diagnosticsource.4.6.0.nupkg.sha512",
     "/Users/philipedat/.nuget/packages/system.io.filesystem.accesscontrol/5.0.0/system.io.filesystem.accesscontrol.5.0.0.nupkg.sha512",
     "/Users/philipedat/.nuget/packages/system.memory/4.5.4/system.memory.4.5.4.nupkg.sha512",
