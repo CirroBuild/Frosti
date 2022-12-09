@@ -1,12 +1,12 @@
 {
-  "webAppName": {
-    "value": "__WEBAPPNAME__"
-  },
-  "cosmosName": {
-    "value": "__COSMOSNAME__"
+  "projectName": {
+    "value": "__PROJECTNAME__"
   },
   "webAppSku": {
     "value": "__WEBAPPSKU__"
+  },
+  "functionAppSku": {
+    "value": "__FUNCTIONAPPSKU__"
   },
   "services": {
     "value": "__SERVICES__"

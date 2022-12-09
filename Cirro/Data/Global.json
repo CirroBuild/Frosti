@@ -1,64 +1,126 @@
 {
-    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-    "contentVersion": "1.0.0.0",
-    "parameters": {
-      "webAppName": {
-        "type": "string"
-      },
-      "location": {
-        "type": "string",
-        "defaultValue": "[resourceGroup().location]"
-      },
-      "cosmosName": {
-        "type": "string"
-      },
-      "webAppSku": {
-        "type": "string"
-      },
-      "services": {
-        "type": "array"
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "projectName": {
+      "type": "string"
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]"
+    },
+    "webAppSku": {
+      "type": "string"
+    },
+    "functionAppSku": {
+      "type": "string"
+    },
+    "services": {
+      "type": "array"
+    }
+  },
+  "variables": {
+    "webPlanName": "[format('WebPlan-{0}', parameters('projectName'))]",
+    "functionPlanName": "[format('FunctionPlan-{0}', parameters('projectName'))]",
+    "functionAppName": "[format('{0}FunctionApp', parameters('projectName'))]",
+    "managedIdentityName": "[format('{0}-managedidentity', parameters('projectName'))]",
+    "appInsightsName": "[format('{0}-appinsights', parameters('projectName'))]",
+    "cosmosName": "[format('{0}cosmos', parameters('projectName'))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+      "apiVersion": "2022-01-31-preview",
+      "name": "[variables('managedIdentityName')]",
+      "location": "[parameters('location')]"
+    },
+    {
+      "condition": "[contains(parameters('services'), 'ApplicationInsights')]",
+      "type": "Microsoft.Insights/components",
+      "apiVersion": "2020-02-02",
+      "name": "[variables('appInsightsName')]",
+      "location": "[parameters('location')]",
+      "kind": "web",
+      "properties": {
+        "Application_Type": "web",
+        "Request_Source": "IbizaWebAppExtensionCreate"
       }
     },
-    "variables": {
-      "appServicePlanName": "[format('Plan-{0}', parameters('webAppName'))]"
+    {
+      "condition": "[contains(parameters('services'), 'WebApp')]",
+      "type": "Microsoft.Web/serverfarms",
+      "apiVersion": "2021-02-01",
+      "name": "[variables('webPlanName')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "[parameters('webAppSku')]"
+      },
+      "kind": "linux",
+      "properties": {
+        "reserved": true
+      }
     },
-    "resources": [
-      {
-        "condition": "[contains(parameters('services'), 'WebApp')]",
-        "type": "Microsoft.Web/serverfarms",
-        "apiVersion": "2021-02-01",
-        "name": "[variables('appServicePlanName')]",
-        "location": "[parameters('location')]",
-        "sku": {
-          "name": "[parameters('webAppSku')]"
+    {
+      "condition": "[contains(parameters('services'), 'FunctionApp')]",
+      "type": "Microsoft.Web/serverfarms",
+      "apiVersion": "2021-02-01",
+      "name": "[variables('functionPlanName')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "[parameters('functionAppSku')]"
+      }
+    },
+    {
+      "condition": "[contains(parameters('services'), 'FunctionApp')]",
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2022-03-01",
+      "name": "[variables('functionAppName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "httpsOnly": true,
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('functionPlanName'))]",
+        "siteConfig": {
+          "minTlsVersion": "1.2"
+        }
+      },
+      "identity": {
+        "type": "userAssigned",
+        "userAssignedIdentities": {
+            "[resourceID('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('managedIdentityName'))]": {}
+        }
+      }
+    },
+    {
+      "condition": "[contains(parameters('services'), 'Cosmos')]",
+      "name": "[toLower(concat(variables('cosmosName'), uniqueString(resourceGroup().id)))]",
+      "type": "Microsoft.DocumentDB/databaseAccounts",
+      "apiVersion": "2022-08-15",
+      "location": "[parameters('location')]",
+      "kind": "GlobalDocumentDB",
+      "properties": {
+        "consistencyPolicy": {
+          "defaultConsistencyLevel": "Eventual",
+          "maxStalenessPrefix": 1,
+          "maxIntervalInSeconds": 5
         },
-        "kind": "linux",
-        "properties": {
-          "reserved": true
+        "locations": [
+          {
+            "locationName": "[parameters('location')]",
+            "failoverPriority": 0
+          }
+        ],
+        "databaseAccountOfferType": "Standard",
+        "enableAutomaticFailover": false
+      },
+      "identity": {
+        "type": "userAssigned",
+        "userAssignedIdentities": {
+            "[resourceID('Microsoft.ManagedIdentity/userAssignedIdentities/',variables('managedIdentityName'))]": {}
         }
       },
-      {
-        "condition": "[contains(parameters('services'), 'Cosmos')]",
-        "name": "[toLower(concat(parameters('cosmosName'), uniqueString(resourceGroup().id)))]",
-        "type": "Microsoft.DocumentDB/databaseAccounts",
-        "apiVersion": "2019-12-12",
-        "location": "[parameters('location')]",
-        "kind": "GlobalDocumentDB",
-        "properties": {
-          "consistencyPolicy": {
-            "defaultConsistencyLevel": "Eventual",
-            "maxStalenessPrefix": 1,
-            "maxIntervalInSeconds": 5
-          },
-          "locations": [
-            {
-              "locationName": "[parameters('location')]",
-              "failoverPriority": 0
-            }
-          ],
-          "databaseAccountOfferType": "Standard",
-          "enableAutomaticFailover": false
-        }
-      }
-    ]
-  }
+      "dependsOn": [
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities/',variables('managedIdentityName'))]"
+      ]
+    }
+  ]
+}

@@ -3,18 +3,12 @@
     "contentVersion": "1.0.0.0",
 
     "parameters": {
-      "globalResourceGroupName": {
-        "type": "string"
-      },
-      "webAppName": {
+      "projectName": {
         "type": "string"
       },
       "location": {
         "type": "string",
         "defaultValue": "[resourceGroup().location]"
-      },
-      "appServicePlanName": {
-        "type": "string"
       },
       "linuxFxVersion": {
         "type": "string"
@@ -24,24 +18,31 @@
       }
     },
     "variables": {
-      "regionalWebAppName": "[format('{0}-{1}', parameters('webAppName'), parameters('location'))]"
+      "globalResourceGroupName": "[format('{0}-Global', parameters('projectName'))]",
+      "webPlanName": "[format('WebPlan-{0}', parameters('projectName'))]",
+      "regionalWebAppName": "[format('{0}Web-{1}', parameters('projectName'), parameters('location'))]",
+      "managedIdentityName": "[format('{0}-managedidentity', parameters('projectName'))]"
     },
     "resources": [
       {
-        "type": "Microsoft.Web/sites",
-        "apiVersion": "2021-02-01",
+      "condition": "[contains(parameters('services'), 'WebApp')]",
+      "type": "Microsoft.Web/sites",
+        "apiVersion": "2022-03-01",
         "name": "[variables('regionalWebAppName')]",
         "location": "[parameters('location')]",
         "properties": {
           "httpsOnly": true,
-          "serverFarmId": "[resourceId(parameters('globalResourceGroupName'), 'Microsoft.Web/serverfarms', parameters('appServicePlanName'))]",
+          "serverFarmId": "[resourceId(variables('globalResourceGroupName'), 'Microsoft.Web/serverfarms', variables('webPlanName'))]",
           "siteConfig": {
             "linuxFxVersion": "[parameters('linuxFxVersion')]",
             "minTlsVersion": "1.2"
           }
         },
         "identity": {
-          "type": "SystemAssigned"
+          "type": "userAssigned",
+          "userAssignedIdentities": {
+              "[resourceID(variables('globalResourceGroupName'), 'Microsoft.ManagedIdentity/userAssignedIdentities/', variables('managedIdentityName'))]": {}
+          }
         }
       }
     ]

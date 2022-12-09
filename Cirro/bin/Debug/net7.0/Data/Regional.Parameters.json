@@ -1,12 +1,6 @@
 {
-  "globalResourceGroupName": {
-    "value": "__WEBAPPNAME__-Global"
-  },
-  "webAppName": {
-    "value": "__WEBAPPNAME__"
-  },
-  "appServicePlanName": {
-    "value": "Plan-__WEBAPPNAME__"
+  "projectName": {
+    "value": "__PROJECTNAME__"
   },
   "linuxFxVersion": {
     "value": "__LINUXVERSION__"

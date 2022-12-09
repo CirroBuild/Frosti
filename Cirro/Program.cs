@@ -45,32 +45,69 @@ public class Parser
         var projName = Path.GetFileName(args[0]).Replace(".csproj", "") + "Auto";
 
         Console.WriteLine($"ProjectName: {projName}");
+        configs.Add("__PROJECTNAME__", projName);
 
         //Should be able to move a lot of this to a const dictionary
         if (csprojData.Contains("<Project Sdk=\"Microsoft.NET.Sdk.Web\">"))
         {
             services.Add("WebApp");
-            configs.Add("__WEBAPPNAME__", projName);
-
             configs.Add("__WEBAPPSKU__", env == "dev" ? "F1" : "S1");
 
         }
         else if (csprojData.Contains("Microsoft.NET.Sdk.Functions"))
         {
             services.Add("FunctionApp");
-            configs.Add("__FUNCTIONAPPNAME__", projName);
+            configs.Add("__FUNCTIONAPPSKU__", env == "dev" ? "Y1" : "EP1");
         }
 
         if (csprojData.Contains("Azure.Storage"))
         {
             services.Add("Storage");
-            configs.Add("__STORAGENAME__", projName.ToLower() + "storage");
+        }
+
+        if (csprojData.Contains("Azure.Storage.Blobs"))
+        {
+            services.Add("Blob");
+        }
+
+        if (csprojData.Contains("Azure.Storage.Queues"))
+        {
+            services.Add("Queues");
+        }
+
+        if (csprojData.Contains("Azure.Storage.Files.Shares"))
+        {
+            services.Add("Files");
+        }
+
+        if (csprojData.Contains("Azure.Storage.Files.DataLake"))
+        {
+            services.Add("DataLake");
+        }
+
+        if (csprojData.Contains("Azure.Messaging.ServiceBus"))
+        {
+            services.Add("ServiceBus");
+        }
+
+        if (csprojData.Contains("Azure.Messaging.EventHubs"))
+        {
+            services.Add("EventHubs");
+        }
+
+        if (csprojData.Contains("Azure.Security.KeyVault"))
+        {
+            services.Add("KeyVault");
+        }
+
+        if (csprojData.Contains("Microsoft.ApplicationInsights"))
+        {
+            services.Add("ApplicationInsights");
         }
 
         if (csprojData.Contains("Microsoft.Azure.Cosmos"))
         {
             services.Add("Cosmos");
-            configs.Add("__COSMOSNAME__", projName.ToLower() + "cosmos");
         }
 
         if (services.Contains("WebApp") || services.Contains("FunctionApp"))
@@ -125,7 +162,7 @@ public class Parser
         await Provision(ArmDeploymentCollection, configs, globalTemplate, globalParameters, "Global");
 
         //Regional Deploys
-        Console.WriteLine($"Creating the Global Resource Group");
+        Console.WriteLine($"Creating the {AzureLocation.CentralUS} Resource Group");
         operation = await resourceGroups.CreateOrUpdateAsync(WaitUntil.Completed, $"{projName}-{AzureLocation.CentralUS}", new ResourceGroupData(AzureLocation.CentralUS));
         resourceGroup = operation.Value;
         ArmDeploymentCollection = resourceGroup.GetArmDeployments();
