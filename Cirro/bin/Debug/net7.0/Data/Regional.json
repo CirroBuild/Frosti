@@ -19,7 +19,7 @@
     },
     "variables": {
       "globalResourceGroupName": "[format('{0}-Global', parameters('projectName'))]",
-      "webPlanName": "[format('WebPlan-{0}', parameters('projectName'))]",
+      "webPlanName": "[format('Plan-{0}', parameters('projectName'))]",
       "regionalWebAppName": "[format('{0}Web-{1}', parameters('projectName'), parameters('location'))]",
       "managedIdentityName": "[format('{0}-managedidentity', parameters('projectName'))]"
     },

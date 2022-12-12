@@ -95,11 +95,6 @@ public class Parser
             services.Add("EventHubs");
         }
 
-        if (csprojData.Contains("Azure.Security.KeyVault"))
-        {
-            services.Add("KeyVault");
-        }
-
         if (csprojData.Contains("Microsoft.ApplicationInsights"))
         {
             services.Add("ApplicationInsights");
@@ -109,6 +104,36 @@ public class Parser
         {
             services.Add("Cosmos");
         }
+
+        if (csprojData.Contains("StackExchange.Redis"))
+        {
+            services.Add("Redis");
+        }
+
+        //Managed Instance for premium? https://learn.microsoft.com/en-us/azure/azure-sql/managed-instance/create-template-quickstart?view=azuresql&tabs=azure-powershell
+        if (csprojData.Contains("Microsoft.Data.SqlClient"))
+        {
+            services.Add("SQL");
+        }
+
+        //Flexible server for premium? https://learn.microsoft.com/en-us/azure/templates/microsoft.dbformysql/flexibleservers?pivots=deployment-language-arm-template
+        if (csprojData.Contains("MySql.Data"))
+        {
+            services.Add("MySql");
+        }
+
+        if (csprojData.Contains("Npgsql"))
+        {
+            services.Add("PostgreSQL");
+        }
+
+        //Figure out MariaDb
+
+        if (csprojData.Contains("Azure.Security.KeyVault"))
+        {
+            services.Add("KeyVault");
+        }
+
 
         if (services.Contains("WebApp") || services.Contains("FunctionApp"))
         {
@@ -170,8 +195,23 @@ public class Parser
         await Provision(ArmDeploymentCollection, configs, regionalTemplate, regionalParameters, AzureLocation.CentralUS.ToString());
 
         //Link Regional resources to Global resources
-
+            //Add appsettings etc. here
         Console.WriteLine($"Completed Provisioning");
+
+        //Split out global region and primary region
+
+
+        //Could Have a deploy failover region section
+
+
+        //SQL server creation looks at a server login. Considering quering that via questions to terminal
+        //https://learn.microsoft.com/en-us/azure/azure-sql/database/single-database-create-arm-template-quickstart?view=azuresql
+
+        //Consider adding 00 to end of service names to iterate, but since template for everyone would it help?
+
+        //dev then give access to resource groups? instead of role assignment to managed identity
+        //https://learn.microsoft.com/en-us/azure/role-based-access-control/role-assignments-template
+
         return 0;
     }
 

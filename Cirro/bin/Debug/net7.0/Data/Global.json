@@ -20,7 +20,7 @@
     }
   },
   "variables": {
-    "webPlanName": "[format('WebPlan-{0}', parameters('projectName'))]",
+    "webPlanName": "[format('Plan-{0}', parameters('projectName'))]",
     "functionPlanName": "[format('FunctionPlan-{0}', parameters('projectName'))]",
     "functionAppName": "[format('{0}FunctionApp', parameters('projectName'))]",
     "managedIdentityName": "[format('{0}-managedidentity', parameters('projectName'))]",
