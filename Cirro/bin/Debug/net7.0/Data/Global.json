@@ -25,7 +25,14 @@
     "functionAppName": "[format('{0}FunctionApp', parameters('projectName'))]",
     "managedIdentityName": "[format('{0}-managedidentity', parameters('projectName'))]",
     "appInsightsName": "[format('{0}-appinsights', parameters('projectName'))]",
-    "cosmosName": "[format('{0}cosmos', parameters('projectName'))]"
+    "cosmosName": "[format('{0}cosmos', parameters('projectName'))]",
+    "storageName": "[format('{0}storage', parameters('projectName'))]",
+    "serviceBusName": "[format('{0}-servicebus', parameters('projectName'))]",
+    "eventHubName": "[format('{0}-eventhub', parameters('projectName'))]",
+    "redisCacheName": "[format('{0}-redis', parameters('projectName'))]",
+    "sqlServerName": "[format('{0}-sqlserver', parameters('projectName'))]",
+    "mySqlServerName": "[format('{0}-mysqlserver', parameters('projectName'))]",
+    "postgreSqlServerName": "[format('{0}-postgresqlserver', parameters('projectName'))]"
   },
   "resources": [
     {
@@ -76,6 +83,7 @@
       "apiVersion": "2022-03-01",
       "name": "[variables('functionAppName')]",
       "location": "[parameters('location')]",
+      "kind": "functionapp",
       "properties": {
         "httpsOnly": true,
         "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('functionPlanName'))]",
@@ -83,6 +91,9 @@
           "minTlsVersion": "1.2"
         }
       },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms/',variables('functionPlanName'))]"
+      ],
       "identity": {
         "type": "userAssigned",
         "userAssignedIdentities": {
@@ -92,7 +103,7 @@
     },
     {
       "condition": "[contains(parameters('services'), 'Cosmos')]",
-      "name": "[toLower(concat(variables('cosmosName'), uniqueString(resourceGroup().id)))]",
+      "name": "[take(toLower(concat(variables('cosmosName'), uniqueString(resourceGroup().id))),24)]",
       "type": "Microsoft.DocumentDB/databaseAccounts",
       "apiVersion": "2022-08-15",
       "location": "[parameters('location')]",
@@ -121,6 +132,137 @@
       "dependsOn": [
         "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities/',variables('managedIdentityName'))]"
       ]
+    },
+    {
+      "condition": "[contains(parameters('services'), 'Storage')]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2021-09-01",
+      "name": "[take(toLower(concat(variables('storageName'), uniqueString(resourceGroup().id))),24)]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "Standard_LRS",
+        "tier": "Standard"
+      },
+      "kind": "StorageV2",
+      "identity": {
+        "type": "userAssigned",
+        "userAssignedIdentities": {
+            "[resourceID('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('managedIdentityName'))]": {}
+        }
+      },
+      "properties": {
+        "accessTier": "Hot"
+      }
+    },
+    {
+      "condition": "[contains(parameters('services'), 'ServiceBus')]",
+      "type": "Microsoft.ServiceBus/Namespaces",
+      "apiVersion": "2021-11-01",
+      "name": "[variables('serviceBusName')]",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "Basic"
+      },
+      "identity": {
+        "type": "userAssigned",
+        "userAssignedIdentities": {
+            "[resourceID('Microsoft.ManagedIdentity/userAssignedIdentities/',variables('managedIdentityName'))]": {}
+        }
+      }
+    },
+    {
+      "condition": "[contains(parameters('services'), 'EventHubs')]",
+      "type": "Microsoft.EventHub/namespaces",
+      "apiVersion": "2021-11-01",
+      "name": "[variables('eventHubName')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "Basic",
+        "tier": "Basic"
+      },
+      "properties": {
+        "isAutoInflateEnabled": false,
+        "maximumThroughputUnits": 0
+      },
+      "identity": {
+        "type": "userAssigned",
+        "userAssignedIdentities": {
+            "[resourceID('Microsoft.ManagedIdentity/userAssignedIdentities/',variables('managedIdentityName'))]": {}
+        }
+      }
+    },
+    {
+      "condition": "[contains(parameters('services'), 'Redis')]",
+      "type": "Microsoft.Cache/redis",
+      "apiVersion": "2022-06-01",
+      "name": "[variables('redisCacheName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "enableNonSslPort": true,
+        "minimumTlsVersion": "1.2",
+        "sku": {
+          "capacity": "0",
+          "family": "C",
+          "name": "Basic"
+        }
+      },
+      "identity": {
+        "type": "userAssigned",
+        "userAssignedIdentities": {
+            "[resourceID('Microsoft.ManagedIdentity/userAssignedIdentities/',variables('managedIdentityName'))]": {}
+        }
+      }
+    },
+    {
+      "condition": "[contains(parameters('services'), 'SQL')]",
+      "type": "Microsoft.Sql/servers",
+      "apiVersion": "2022-05-01-preview",
+      "name": "[variables('sqlServerName')]",
+      "location": "[parameters('location')]",
+      "identity": {
+        "type": "userAssigned",
+        "userAssignedIdentities": {
+            "[resourceID('Microsoft.ManagedIdentity/userAssignedIdentities/',variables('managedIdentityName'))]": {}
+        }
+      },
+      "properties": {
+        "administratorLogin": "CirroAdmin",
+        "administratorLoginPassword": "!!CirroBuild1010!!",
+        "primaryUserAssignedIdentityId": "[resourceID('Microsoft.ManagedIdentity/userAssignedIdentities/',variables('managedIdentityName'))]",
+        "minimalTlsVersion": "1.2"
+      }
+    },
+    {
+      "condition": "[contains(parameters('services'), 'MySql')]",
+      "type": "Microsoft.DBforMySQL/servers",
+      "apiVersion": "2017-12-01",
+      "name": "[variables('mySqlServerName')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "B_Gen5_1"
+      },
+      "properties": {
+        "createMode": "Default",
+        "version": "5.7",
+        "administratorLogin": "CirroAdmin",
+        "administratorLoginPassword": "!!CirroBuild1010!!"
+      }
+    },
+    {
+      "condition": "[contains(parameters('services'), 'PostgreSQL')]",
+      "type": "Microsoft.DBforPostgreSQL/servers",
+      "apiVersion": "2017-12-01",
+      "name": "[toLower(concat(variables('postgreSqlServerName'), uniqueString(resourceGroup().id)))]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "B_Gen5_1"
+      },
+      "properties": {
+        "createMode": "Default",
+        "version": "10",
+        "administratorLogin": "CirroAdmin",
+        "administratorLoginPassword": "!!CirroBuild1010!!"
+      }
     }
   ]
 }

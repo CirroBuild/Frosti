@@ -1,7 +1,8 @@
 ﻿<Properties StartupConfiguration="{55BE7C36-DD3F-43B8-8248-F3EF8164ED70}|Default">
   <MonoDevelop.Ide.Workbench ActiveDocument="Cirro/Program.cs">
     <Files>
-      <File FileName="Cirro/Program.cs" Line="66" Column="64" />
+      <File FileName="Cirro/Cirro.csproj" />
+      <File FileName="Cirro/Program.cs" Line="35" Column="38" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">

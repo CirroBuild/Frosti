@@ -25,8 +25,8 @@
     "functionAppName": "[format('{0}FunctionApp', parameters('projectName'))]",
     "managedIdentityName": "[format('{0}-managedidentity', parameters('projectName'))]",
     "appInsightsName": "[format('{0}-appinsights', parameters('projectName'))]",
-    "cosmosName": "[format('{0}cosmos00', parameters('projectName'))]",
-    "storageName": "[format('{0}storage00', parameters('projectName'))]",
+    "cosmosName": "[format('{0}cosmos', parameters('projectName'))]",
+    "storageName": "[format('{0}storage', parameters('projectName'))]",
     "serviceBusName": "[format('{0}-servicebus', parameters('projectName'))]",
     "eventHubName": "[format('{0}-eventhub', parameters('projectName'))]",
     "redisCacheName": "[format('{0}-redis', parameters('projectName'))]",
@@ -83,6 +83,7 @@
       "apiVersion": "2022-03-01",
       "name": "[variables('functionAppName')]",
       "location": "[parameters('location')]",
+      "kind": "functionapp",
       "properties": {
         "httpsOnly": true,
         "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('functionPlanName'))]",
@@ -90,6 +91,9 @@
           "minTlsVersion": "1.2"
         }
       },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms/',variables('functionPlanName'))]"
+      ],
       "identity": {
         "type": "userAssigned",
         "userAssignedIdentities": {
@@ -99,7 +103,7 @@
     },
     {
       "condition": "[contains(parameters('services'), 'Cosmos')]",
-      "name": "[toLower(concat(variables('cosmosName'), uniqueString(resourceGroup().id)))]",
+      "name": "[take(toLower(concat(variables('cosmosName'), uniqueString(resourceGroup().id))),24)]",
       "type": "Microsoft.DocumentDB/databaseAccounts",
       "apiVersion": "2022-08-15",
       "location": "[parameters('location')]",
@@ -133,7 +137,7 @@
       "condition": "[contains(parameters('services'), 'Storage')]",
       "type": "Microsoft.Storage/storageAccounts",
       "apiVersion": "2021-09-01",
-      "name": "[toLower(concat(variables('storageName'), uniqueString(resourceGroup().id)))]",
+      "name": "[take(toLower(concat(variables('storageName'), uniqueString(resourceGroup().id))),24)]",
       "location": "[parameters('location')]",
       "sku": {
         "name": "Standard_LRS",
@@ -214,7 +218,19 @@
       "type": "Microsoft.Sql/servers",
       "apiVersion": "2022-05-01-preview",
       "name": "[variables('sqlServerName')]",
-      "location": "[parameters('location')]"
+      "location": "[parameters('location')]",
+      "identity": {
+        "type": "userAssigned",
+        "userAssignedIdentities": {
+            "[resourceID('Microsoft.ManagedIdentity/userAssignedIdentities/',variables('managedIdentityName'))]": {}
+        }
+      },
+      "properties": {
+        "administratorLogin": "CirroAdmin",
+        "administratorLoginPassword": "!!CirroBuild1010!!",
+        "primaryUserAssignedIdentityId": "[resourceID('Microsoft.ManagedIdentity/userAssignedIdentities/',variables('managedIdentityName'))]",
+        "minimalTlsVersion": "1.2"
+      }
     },
     {
       "condition": "[contains(parameters('services'), 'MySql')]",
@@ -223,11 +239,13 @@
       "name": "[variables('mySqlServerName')]",
       "location": "[parameters('location')]",
       "sku": {
-        "name": "B_Gen4_2"
+        "name": "B_Gen5_1"
       },
       "properties": {
         "createMode": "Default",
-        "version": "5.7"
+        "version": "5.7",
+        "administratorLogin": "CirroAdmin",
+        "administratorLoginPassword": "!!CirroBuild1010!!"
       }
     },
     {
@@ -237,13 +255,13 @@
       "name": "[toLower(concat(variables('postgreSqlServerName'), uniqueString(resourceGroup().id)))]",
       "location": "[parameters('location')]",
       "sku": {
-        "name": "B_Gen4_1"
+        "name": "B_Gen5_1"
       },
       "properties": {
         "createMode": "Default",
-        "version": "[parameters('postgresqlVersion')]",
-        "administratorLogin": "test",
-        "administratorLoginPassword": "testPass"
+        "version": "10",
+        "administratorLogin": "CirroAdmin",
+        "administratorLoginPassword": "!!CirroBuild1010!!"
       }
     }
   ]

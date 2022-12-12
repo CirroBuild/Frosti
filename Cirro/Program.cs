@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Linq;
 using System.Reflection.Metadata;
 using System.Security.Cryptography;
 using System.Text.Json.Nodes;
@@ -12,6 +13,39 @@ using Azure.ResourceManager.Resources.Models;
 
 public class Parser
 {
+    private static class SupportedServices
+    {
+        public static readonly string WebApp = "WebApp";
+        public static readonly string FunctionApp = "FunctionApp";
+        public static readonly string Storage = "Storage";
+        public static readonly string ServiceBus = "ServiceBus";
+        public static readonly string EventHubs = "EventHubs";
+        public static readonly string ApplicationInsights = "ApplicationInsights";
+        public static readonly string Cosmos = "Cosmos";
+        public static readonly string Redis = "Redis";
+        public static readonly string SQL = "SQL";
+        public static readonly string MySql = "MySql";
+        public static readonly string PostgreSQL = "PostgreSQL";
+        public static readonly string KeyVault = "KeyVault";
+    };
+
+    private static readonly Dictionary<string, string> SdkToServices = new Dictionary<string, string>()
+    {
+        {"<Project Sdk=\"Microsoft.NET.Sdk.Web\">", SupportedServices.WebApp},
+        {"Microsoft.NET.Sdk.Functions", SupportedServices.FunctionApp},
+        {"Azure.Storage", SupportedServices.Storage},                               //Blobs, Queues, Files, DataLake (seperate sdks exist. Needed?)
+        {"Azure.Security.KeyVault", SupportedServices.KeyVault},
+        {"Azure.Messaging.ServiceBus", SupportedServices.ServiceBus},
+        {"Azure.Messaging.EventHubs", SupportedServices.EventHubs},
+        {"Microsoft.ApplicationInsights", SupportedServices.ApplicationInsights},
+        {"Microsoft.Azure.Cosmos", SupportedServices.Cosmos},
+        {"StackExchange.Redis", SupportedServices.Redis},
+        {"Microsoft.Data.SqlClient", SupportedServices.SQL},                        //Managed Instance for premium? https://learn.microsoft.com/en-us/azure/azure-sql/managed-instance/create-template-quickstart?view=azuresql&tabs=azure-powershell
+        {"MySql.Data", SupportedServices.MySql},                                    //Flexible server for premium? https://learn.microsoft.com/en-us/azure/templates/microsoft.dbformysql/flexibleservers?pivots=deployment-language-arm-template
+        {"Npgsql", SupportedServices.PostgreSQL}
+        //Figure out MariaDb
+    };
+
     public static async Task<int> Main(string[] args)
     {
         var supportedEnvs = new List<string>() {"test", "dev", "prod" };
@@ -47,95 +81,26 @@ public class Parser
         Console.WriteLine($"ProjectName: {projName}");
         configs.Add("__PROJECTNAME__", projName);
 
-        //Should be able to move a lot of this to a const dictionary
-        if (csprojData.Contains("<Project Sdk=\"Microsoft.NET.Sdk.Web\">"))
+        foreach (var sdkToService in SdkToServices)
         {
-            services.Add("WebApp");
+            if (csprojData.Contains(sdkToService.Key))
+            {
+                services.Add(sdkToService.Value);
+            }
+        }
+
+        //Should be able to move a lot of this to a const dictionary
+        if (services.Contains(SupportedServices.WebApp))
+        {
             configs.Add("__WEBAPPSKU__", env == "dev" ? "F1" : "S1");
 
         }
-        else if (csprojData.Contains("Microsoft.NET.Sdk.Functions"))
+        if (services.Contains(SupportedServices.FunctionApp))   //need to support multiple csprojs for this
         {
-            services.Add("FunctionApp");
             configs.Add("__FUNCTIONAPPSKU__", env == "dev" ? "Y1" : "EP1");
         }
 
-        if (csprojData.Contains("Azure.Storage"))
-        {
-            services.Add("Storage");
-        }
-
-        if (csprojData.Contains("Azure.Storage.Blobs"))
-        {
-            services.Add("Blob");
-        }
-
-        if (csprojData.Contains("Azure.Storage.Queues"))
-        {
-            services.Add("Queues");
-        }
-
-        if (csprojData.Contains("Azure.Storage.Files.Shares"))
-        {
-            services.Add("Files");
-        }
-
-        if (csprojData.Contains("Azure.Storage.Files.DataLake"))
-        {
-            services.Add("DataLake");
-        }
-
-        if (csprojData.Contains("Azure.Messaging.ServiceBus"))
-        {
-            services.Add("ServiceBus");
-        }
-
-        if (csprojData.Contains("Azure.Messaging.EventHubs"))
-        {
-            services.Add("EventHubs");
-        }
-
-        if (csprojData.Contains("Microsoft.ApplicationInsights"))
-        {
-            services.Add("ApplicationInsights");
-        }
-
-        if (csprojData.Contains("Microsoft.Azure.Cosmos"))
-        {
-            services.Add("Cosmos");
-        }
-
-        if (csprojData.Contains("StackExchange.Redis"))
-        {
-            services.Add("Redis");
-        }
-
-        //Managed Instance for premium? https://learn.microsoft.com/en-us/azure/azure-sql/managed-instance/create-template-quickstart?view=azuresql&tabs=azure-powershell
-        if (csprojData.Contains("Microsoft.Data.SqlClient"))
-        {
-            services.Add("SQL");
-        }
-
-        //Flexible server for premium? https://learn.microsoft.com/en-us/azure/templates/microsoft.dbformysql/flexibleservers?pivots=deployment-language-arm-template
-        if (csprojData.Contains("MySql.Data"))
-        {
-            services.Add("MySql");
-        }
-
-        if (csprojData.Contains("Npgsql"))
-        {
-            services.Add("PostgreSQL");
-        }
-
-        //Figure out MariaDb
-
-        if (csprojData.Contains("Azure.Security.KeyVault"))
-        {
-            services.Add("KeyVault");
-        }
-
-
-        if (services.Contains("WebApp") || services.Contains("FunctionApp"))
+        if (services.Contains(SupportedServices.WebApp) || services.Contains(SupportedServices.FunctionApp))
         {
             var regex = new Regex("<TargetFramework>(.*)</TargetFramework>");
             var v = regex.Match(csprojData);
