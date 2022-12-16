@@ -12,12 +12,15 @@
     <None Remove="Azure.Identity" />
     <None Remove="Azure.ResourceManager.Resources" />
     <None Remove="Newtonsoft.Json" />
+    <None Remove="Microsoft.Graph.Core" />
+    <None Remove="Microsoft.Graph" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Azure.ResourceManager" Version="1.3.2" />
     <PackageReference Include="Azure.Identity" Version="1.8.0" />
     <PackageReference Include="Azure.ResourceManager.Resources" Version="1.3.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
+    <PackageReference Include="Microsoft.Graph" Version="4.48.0" />
   </ItemGroup>
   <ItemGroup>
     <None Update="Data\Regional.Parameters.json">
@@ -30,6 +33,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Data\Global.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Link.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Link.Parameters.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

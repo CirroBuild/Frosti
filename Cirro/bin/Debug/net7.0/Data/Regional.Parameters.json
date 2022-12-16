@@ -2,6 +2,9 @@
   "projectName": {
     "value": "__PROJECTNAME__"
   },
+  "userPrincipalId": {
+    "value": "__USERPRINCIPALID__"
+  },
   "linuxFxVersion": {
     "value": "__LINUXVERSION__"
   },

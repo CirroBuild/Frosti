@@ -1,0 +1,8 @@
+{
+  "projectName": {
+    "value": "__PROJECTNAME__"
+  },
+  "services": {
+    "value": "__SERVICES__"
+  }
+}

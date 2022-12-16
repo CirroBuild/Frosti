@@ -103,7 +103,7 @@
     },
     {
       "condition": "[contains(parameters('services'), 'Cosmos')]",
-      "name": "[take(toLower(concat(variables('cosmosName'), uniqueString(resourceGroup().id))),24)]",
+      "name": "[take(toLower(concat(variables('cosmosName'), uniqueString(resourceGroup().id))),44)]",
       "type": "Microsoft.DocumentDB/databaseAccounts",
       "apiVersion": "2022-08-15",
       "location": "[parameters('location')]",

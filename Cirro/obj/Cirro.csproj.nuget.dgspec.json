@@ -50,6 +50,10 @@
               "target": "Package",
               "version": "[1.3.1, )"
             },
+            "Microsoft.Graph": {
+              "target": "Package",
+              "version": "[4.48.0, )"
+            },
             "Newtonsoft.Json": {
               "target": "Package",
               "version": "[13.0.2, )"

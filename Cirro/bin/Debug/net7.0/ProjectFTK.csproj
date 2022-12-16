@@ -26,16 +26,7 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.3.0" />
     <PackageReference Include="Azure.Identity" Version="1.6.0" />
     <PackageReference Include="Microsoft.Extensions.Azure" Version="1.2.0" />
-    <PackageReference Include="MySql.Data" Version="8.0.29" />
-    <PackageReference Include="Azure.Storage" Version="8.0.29" />
     <PackageReference Include="Azure.Security.KeyVault" Version="8.0.29" />
-    <PackageReference Include="Azure.Messaging.ServiceBus" Version="8.0.29" />
-    <PackageReference Include="Azure.Messaging.EventHubs" Version="8.0.29" />
-    <PackageReference Include="Microsoft.ApplicationInsights" Version="8.0.29" />
-    <PackageReference Include="StackExchange.Redis" Version="8.0.29" />
-    <PackageReference Include="Microsoft.Data.SqlClient" Version="8.0.29" />
-    <PackageReference Include="Npgsql" Version="2.1.10" />
-    <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="2.1.10" />
     <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.27.2" />
   </ItemGroup>
 
@@ -51,7 +42,6 @@
     <None Remove="Microsoft.Extensions.Azure" />
     <None Remove="Microsoft.AspNetCore.SpaServices" />
     <None Remove="Microsoft.AspNetCore.SpaServices.Extensions" />
-    <None Remove="MySql.Data" />
     <None Remove="MySqlConnector" />
     <None Remove="Services\" />
     <None Remove="Microsoft.Azure.Cosmos" />

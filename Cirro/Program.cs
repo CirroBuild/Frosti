@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Linq;
 using System.Reflection.Metadata;
+using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
@@ -10,6 +11,7 @@ using Azure.Identity;
 using Azure.ResourceManager;
 using Azure.ResourceManager.Resources;
 using Azure.ResourceManager.Resources.Models;
+using Microsoft.Graph;
 
 public class Parser
 {
@@ -109,9 +111,26 @@ public class Parser
             configs.Add("__LINUXVERSION__", "DOTNETCORE|" + s.Replace("net", ""));
         }
 
+        var credential = new AzureCliCredential();
+
+        if (env.Equals("dev"))
+        {
+            var graphClient = new GraphServiceClient(credential);
+            var users = await graphClient.Users
+                .Request()
+                .GetAsync();
+            var principalId = users.FirstOrDefault()?.Id;
+
+            if (principalId != null)
+            {
+                configs.Add("__USERPRINCIPALID__", principalId);
+                services.Add("DevUser");
+            }
+        }
+
         configs.Add("\"__SERVICES__\"", "[\"" + string.Join("\",\"", services) + "\"]");
 
-        var client = new ArmClient(new AzureCliCredential());
+        var client = new ArmClient(credential);
         SubscriptionResource subscription;
 
         if (args.Length < 3)
@@ -121,7 +140,7 @@ public class Parser
         else
         {
             var subs = client.GetSubscriptions();
-            subscription = subs.FirstOrDefault(x => x.Data.SubscriptionId == args[2]) ?? await client.GetDefaultSubscriptionAsync();
+            subscription = subs.FirstOrDefault(x => x.Data.SubscriptionId == args[2]) ?? await client.GetDefaultSubscriptionAsync();    //shouldn't default, should throw error instead
         }
 
         Console.WriteLine($"Using subscription: {subscription.Data.SubscriptionId}");
@@ -137,30 +156,37 @@ public class Parser
             return 0;
         }
 
-        var globalTemplate = File.ReadAllText($"Data/Global.json");
-        var globalParameters = File.ReadAllText($"Data/Global.Parameters.json");
-        var regionalTemplate = File.ReadAllText($"Data/Regional.json");
-        var regionalParameters = File.ReadAllText($"Data/Regional.Parameters.json");
+        var globalTemplate = System.IO.File.ReadAllText($"Data/Global.json");
+        var globalParameters = System.IO.File.ReadAllText($"Data/Global.Parameters.json");
+        var regionalTemplate = System.IO.File.ReadAllText($"Data/Regional.json");
+        var regionalParameters = System.IO.File.ReadAllText($"Data/Regional.Parameters.json");
+        var linkTemplate = System.IO.File.ReadAllText($"Data/Link.json");
+        var linkParameters = System.IO.File.ReadAllText($"Data/Link.Parameters.json");
+
+        var resourceGroups = subscription.GetResourceGroups();
 
         //Global Deploy
         Console.WriteLine($"Creating the Global Resource Group");
-        var resourceGroups = subscription.GetResourceGroups();
         var operation = await resourceGroups.CreateOrUpdateAsync(WaitUntil.Completed, $"{projName}-Global", new ResourceGroupData(AzureLocation.CentralUS));
-        var resourceGroup = operation.Value;
-        var ArmDeploymentCollection = resourceGroup.GetArmDeployments();
+        var globalResourceGroup = operation.Value;
+        var ArmDeploymentCollection = globalResourceGroup.GetArmDeployments();
 
-        await Provision(ArmDeploymentCollection, configs, globalTemplate, globalParameters, "Global");
+        //await Provision(ArmDeploymentCollection, configs, globalTemplate, globalParameters, "Global");
 
         //Regional Deploys
         Console.WriteLine($"Creating the {AzureLocation.CentralUS} Resource Group");
         operation = await resourceGroups.CreateOrUpdateAsync(WaitUntil.Completed, $"{projName}-{AzureLocation.CentralUS}", new ResourceGroupData(AzureLocation.CentralUS));
-        resourceGroup = operation.Value;
-        ArmDeploymentCollection = resourceGroup.GetArmDeployments();
+        var regionalResourceGroup = operation.Value;
+        ArmDeploymentCollection = regionalResourceGroup.GetArmDeployments();
 
-        await Provision(ArmDeploymentCollection, configs, regionalTemplate, regionalParameters, AzureLocation.CentralUS.ToString());
+        //await Provision(ArmDeploymentCollection, configs, regionalTemplate, regionalParameters, AzureLocation.CentralUS.ToString());
 
-        //Link Regional resources to Global resources
-            //Add appsettings etc. here
+        //Link resources
+        ArmDeploymentCollection = regionalResourceGroup.GetArmDeployments();
+        await Provision(ArmDeploymentCollection, configs, linkTemplate, linkParameters, "Linking");
+
+
+        //Add appsettings.dev etc. here
         Console.WriteLine($"Completed Provisioning");
 
         //Split out global region and primary region

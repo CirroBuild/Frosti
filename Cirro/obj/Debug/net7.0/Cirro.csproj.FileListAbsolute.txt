@@ -30,3 +30,13 @@
 /Users/philipedat/Projects/Cirro/Cirro/bin/Debug/net7.0/Data/Regional.json
 /Users/philipedat/Projects/Cirro/Cirro/bin/Debug/net7.0/Data/Regional.Parameters.json
 /Users/philipedat/Projects/Cirro/Cirro/bin/Debug/net7.0/Newtonsoft.Json.dll
+/Users/philipedat/Projects/Cirro/Cirro/bin/Debug/net7.0/Microsoft.Graph.dll
+/Users/philipedat/Projects/Cirro/Cirro/bin/Debug/net7.0/Microsoft.Graph.Core.dll
+/Users/philipedat/Projects/Cirro/Cirro/bin/Debug/net7.0/Microsoft.IdentityModel.JsonWebTokens.dll
+/Users/philipedat/Projects/Cirro/Cirro/bin/Debug/net7.0/Microsoft.IdentityModel.Logging.dll
+/Users/philipedat/Projects/Cirro/Cirro/bin/Debug/net7.0/Microsoft.IdentityModel.Protocols.dll
+/Users/philipedat/Projects/Cirro/Cirro/bin/Debug/net7.0/Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+/Users/philipedat/Projects/Cirro/Cirro/bin/Debug/net7.0/Microsoft.IdentityModel.Tokens.dll
+/Users/philipedat/Projects/Cirro/Cirro/bin/Debug/net7.0/System.IdentityModel.Tokens.Jwt.dll
+/Users/philipedat/Projects/Cirro/Cirro/bin/Debug/net7.0/Data/Link.json
+/Users/philipedat/Projects/Cirro/Cirro/bin/Debug/net7.0/Data/Link.Parameters.json
