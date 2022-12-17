@@ -1,24 +1,15 @@
 ﻿<Properties StartupConfiguration="{55BE7C36-DD3F-43B8-8248-F3EF8164ED70}|Default">
-  <MonoDevelop.Ide.Workbench ActiveDocument="Cirro/Program.cs">
-    <Files>
-      <File FileName="Cirro/Cirro.csproj" />
-      <File FileName="Cirro/Program.cs" Line="35" Column="38" />
-    </Files>
-    <Pads>
-      <Pad Id="ProjectPad">
-        <State name="__root__">
-          <Node name="Cirro" expanded="True">
-            <Node name="Cirro" expanded="True" />
-          </Node>
-        </State>
-      </Pad>
-    </Pads>
-  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
   <MonoDevelop.Ide.DebuggingService.PinnedWatches />
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore />
   </MonoDevelop.Ide.DebuggingService.Breakpoints>
-  <MultiItemStartupConfigurations />
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Cirro/Program.cs">
+    <Files>
+      <File FileName="Cirro/Cirro.csproj" />
+      <File FileName="Cirro/Program.cs" Line="62" Column="18" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.ItemProperties.Cirro PreferredExecutionTarget="MonoDevelop.Default" />
+  <MultiItemStartupConfigurations />
 </Properties>

@@ -5,6 +5,9 @@
   "userPrincipalId": {
     "value": "__USERPRINCIPALID__"
   },
+  "webAppName": {
+    "value": "__WEBAPPNAME__"
+  },
   "linuxFxVersion": {
     "value": "__LINUXVERSION__"
   },

@@ -9,12 +9,6 @@
       "type": "string",
       "defaultValue": "[resourceGroup().location]"
     },
-    "webAppSku": {
-      "type": "string"
-    },
-    "functionAppSku": {
-      "type": "string"
-    },
     "services": {
       "type": "array"
     }
@@ -60,7 +54,7 @@
       "name": "[variables('webPlanName')]",
       "location": "[parameters('location')]",
       "sku": {
-        "name": "[parameters('webAppSku')]"
+        "name": "F1"
       },
       "kind": "linux",
       "properties": {
@@ -74,7 +68,7 @@
       "name": "[variables('functionPlanName')]",
       "location": "[parameters('location')]",
       "sku": {
-        "name": "[parameters('functionAppSku')]"
+        "name": "Y1"
       }
     },
     {

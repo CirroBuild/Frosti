@@ -12,54 +12,37 @@ using Azure.ResourceManager;
 using Azure.ResourceManager.Resources;
 using Azure.ResourceManager.Resources.Models;
 using Microsoft.Graph;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
+namespace Cirro;
 public class Parser
 {
-    private static class SupportedServices
-    {
-        public static readonly string WebApp = "WebApp";
-        public static readonly string FunctionApp = "FunctionApp";
-        public static readonly string Storage = "Storage";
-        public static readonly string ServiceBus = "ServiceBus";
-        public static readonly string EventHubs = "EventHubs";
-        public static readonly string ApplicationInsights = "ApplicationInsights";
-        public static readonly string Cosmos = "Cosmos";
-        public static readonly string Redis = "Redis";
-        public static readonly string SQL = "SQL";
-        public static readonly string MySql = "MySql";
-        public static readonly string PostgreSQL = "PostgreSQL";
-        public static readonly string KeyVault = "KeyVault";
-    };
-
-    private static readonly Dictionary<string, string> SdkToServices = new Dictionary<string, string>()
-    {
-        {"<Project Sdk=\"Microsoft.NET.Sdk.Web\">", SupportedServices.WebApp},
-        {"Microsoft.NET.Sdk.Functions", SupportedServices.FunctionApp},
-        {"Azure.Storage", SupportedServices.Storage},                               //Blobs, Queues, Files, DataLake (seperate sdks exist. Needed?)
-        {"Azure.Security.KeyVault", SupportedServices.KeyVault},
-        {"Azure.Messaging.ServiceBus", SupportedServices.ServiceBus},
-        {"Azure.Messaging.EventHubs", SupportedServices.EventHubs},
-        {"Microsoft.ApplicationInsights", SupportedServices.ApplicationInsights},
-        {"Microsoft.Azure.Cosmos", SupportedServices.Cosmos},
-        {"StackExchange.Redis", SupportedServices.Redis},
-        {"Microsoft.Data.SqlClient", SupportedServices.SQL},                        //Managed Instance for premium? https://learn.microsoft.com/en-us/azure/azure-sql/managed-instance/create-template-quickstart?view=azuresql&tabs=azure-powershell
-        {"MySql.Data", SupportedServices.MySql},                                    //Flexible server for premium? https://learn.microsoft.com/en-us/azure/templates/microsoft.dbformysql/flexibleservers?pivots=deployment-language-arm-template
-        {"Npgsql", SupportedServices.PostgreSQL}
-        //Figure out MariaDb
-    };
 
     public static async Task<int> Main(string[] args)
     {
         var supportedEnvs = new List<string>() {"test", "dev", "prod" };
         var services = new HashSet<string>();
         var configs = new Dictionary<string, string>();
+        var infraPrefix = args[0];
         var csprojData = "";
         var env = "";
 
+        if (args.Length < 1 || args[0].Length > 9)
+        {
+            Console.WriteLine("The Infra Prefix is missing or longer than 10 character. Please see doc {insert doc link}");
+            return 0;
+        }
+
+        Console.WriteLine($"Launched from {Environment.CurrentDirectory}"); // <- find all csproj in current directory and combine them as string
+        //Console.WriteLine($"Physical location {AppDomain.CurrentDomain.BaseDirectory}");
+        //Console.WriteLine($"AppContext.BaseDir {AppContext.BaseDirectory}");
+        //return 0;
+
         try
         {
-            var filepath = args[0];
-            env = args[1];
+            var filepath = args[1];
+            env = args[2];
 
             //check args, i.e. is env of expected value, is filePath openable etc.
             if (supportedEnvs.Contains(env) == false)
@@ -78,12 +61,11 @@ public class Parser
             errorWriter.WriteLine(e.Message);
             return 1;
         }
-        var projName = Path.GetFileName(args[0]).Replace(".csproj", "") + "Auto";
 
-        Console.WriteLine($"ProjectName: {projName}");
-        configs.Add("__PROJECTNAME__", projName);
+        Console.WriteLine($"InfraPrefix: {infraPrefix}");
+        configs.Add("__PROJECTNAME__", infraPrefix);
 
-        foreach (var sdkToService in SdkToServices)
+        foreach (var sdkToService in Services.SdkToServices)
         {
             if (csprojData.Contains(sdkToService.Key))
             {
@@ -91,18 +73,7 @@ public class Parser
             }
         }
 
-        //Should be able to move a lot of this to a const dictionary
-        if (services.Contains(SupportedServices.WebApp))
-        {
-            configs.Add("__WEBAPPSKU__", env == "dev" ? "F1" : "S1");
-
-        }
-        if (services.Contains(SupportedServices.FunctionApp))   //need to support multiple csprojs for this
-        {
-            configs.Add("__FUNCTIONAPPSKU__", env == "dev" ? "Y1" : "EP1");
-        }
-
-        if (services.Contains(SupportedServices.WebApp) || services.Contains(SupportedServices.FunctionApp))
+        if (services.Contains(Services.WebApp) || services.Contains(Services.FunctionApp))
         {
             var regex = new Regex("<TargetFramework>(.*)</TargetFramework>");
             var v = regex.Match(csprojData);
@@ -145,7 +116,7 @@ public class Parser
 
         Console.WriteLine($"Using subscription: {subscription.Data.SubscriptionId}");
         //Console.WriteLine($"Configs: {string.Join(" ",configs)}");
-        Console.WriteLine($"Services to be provisioned: {string.Join(", ",services)}");
+        Console.WriteLine($"Services to be provisioned: Managed Identity (required), Keyvault (required), {string.Join(", ",services.Where(x=>x.Equals("DevUser") == false))}");
 
         Console.WriteLine("Is this correct? (Y/n)");
         string userinput = Console.ReadLine();
@@ -156,37 +127,52 @@ public class Parser
             return 0;
         }
 
-        var globalTemplate = System.IO.File.ReadAllText($"Data/Global.json");
-        var globalParameters = System.IO.File.ReadAllText($"Data/Global.Parameters.json");
-        var regionalTemplate = System.IO.File.ReadAllText($"Data/Regional.json");
-        var regionalParameters = System.IO.File.ReadAllText($"Data/Regional.Parameters.json");
-        var linkTemplate = System.IO.File.ReadAllText($"Data/Link.json");
-        var linkParameters = System.IO.File.ReadAllText($"Data/Link.Parameters.json");
-
         var resourceGroups = subscription.GetResourceGroups();
+        var rgPrefix = $"{infraPrefix}-{env}";
+        var uniqueString = GetUniqueString(subscription.Data.SubscriptionId, rgPrefix);
 
-        //Global Deploy
+        //Global Deploy -> Change this name to Primary
         Console.WriteLine($"Creating the Global Resource Group");
-        var operation = await resourceGroups.CreateOrUpdateAsync(WaitUntil.Completed, $"{projName}-Global", new ResourceGroupData(AzureLocation.CentralUS));
+        var operation = await resourceGroups.CreateOrUpdateAsync(WaitUntil.Completed, $"{rgPrefix}-Global", new ResourceGroupData(AzureLocation.CentralUS));
         var globalResourceGroup = operation.Value;
         var ArmDeploymentCollection = globalResourceGroup.GetArmDeployments();
 
-        //await Provision(ArmDeploymentCollection, configs, globalTemplate, globalParameters, "Global");
+        var globalServiceNames = new ServiceNames(infraPrefix, env, uniqueString, AzureLocation.CentralUS);
+        await Provision(ArmDeploymentCollection, globalServiceNames, configs, services, "Global");
 
         //Regional Deploys
         Console.WriteLine($"Creating the {AzureLocation.CentralUS} Resource Group");
-        operation = await resourceGroups.CreateOrUpdateAsync(WaitUntil.Completed, $"{projName}-{AzureLocation.CentralUS}", new ResourceGroupData(AzureLocation.CentralUS));
+        operation = await resourceGroups.CreateOrUpdateAsync(WaitUntil.Completed, $"{rgPrefix}-{AzureLocation.CentralUS}", new ResourceGroupData(AzureLocation.CentralUS));
         var regionalResourceGroup = operation.Value;
         ArmDeploymentCollection = regionalResourceGroup.GetArmDeployments();
 
-        //await Provision(ArmDeploymentCollection, configs, regionalTemplate, regionalParameters, AzureLocation.CentralUS.ToString());
+        var regionalServiceNames = new ServiceNames(infraPrefix, env, uniqueString, AzureLocation.CentralUS);
+        await Provision(ArmDeploymentCollection, regionalServiceNames, configs, services, "Regional");
+
+        //System.IO.File.Exists to see if Failover json exists
 
         //Link resources
         ArmDeploymentCollection = regionalResourceGroup.GetArmDeployments();
-        await Provision(ArmDeploymentCollection, configs, linkTemplate, linkParameters, "Linking");
+
+        var linkServiceNames = new ServiceNames(infraPrefix, env, uniqueString, AzureLocation.CentralUS);
+        await Provision(ArmDeploymentCollection, linkServiceNames, configs, services, "Link");
 
 
-        //Add appsettings.dev etc. here
+        /*
+        //If Dev, add kv endpoint to appsettings.local/appsettings.dev. STAGE 2 issue
+
+        //Console.WriteLine(AppContext.BaseDirectory);
+        var initialJson = System.IO.File.ReadAllText("appsettings.Developer.json");
+        var array = JArray.Parse(initialJson);
+
+        var itemToAdd = new JObject();
+        itemToAdd["id"] = 1234;
+        itemToAdd["name"] = "carl2";
+        array.Add(itemToAdd);
+
+        var jsonToOutput = JsonConvert.SerializeObject(array, Formatting.Indented);
+        */
+
         Console.WriteLine($"Completed Provisioning");
 
         //Split out global region and primary region
@@ -206,14 +192,30 @@ public class Parser
         return 0;
     }
 
-    private static async Task Provision(ArmDeploymentCollection ArmDeploymentCollection, Dictionary<string, string> configs, string template, string parameters, string region)
+    private static async Task Provision(ArmDeploymentCollection ArmDeploymentCollection, ServiceNames servceNames, Dictionary<string, string> configs, HashSet<string> services, string templateName)
     {
-        Console.WriteLine($"Deploying the {region} Resources. This may take a while.");
+        Console.WriteLine($"Deploying the {templateName} Resources. This may take a while.");
+
+        var template = System.IO.File.ReadAllText($"Data/{templateName}.json");
+        var parameters = System.IO.File.ReadAllText($"Data/{templateName}.Parameters.json");
 
         foreach (var config in configs)
         {
             parameters = parameters.Replace(config.Key, config.Value);
         }
+
+        foreach (var service in services)
+        {
+            if (servceNames.ServiceNameMap.ContainsKey(service))
+            {
+                var serviceName = servceNames.ServiceNameMap[service];
+                parameters = parameters.Replace(serviceName.Key, serviceName.Value);
+            }
+        }
+
+        Console.WriteLine(parameters);
+
+        return;
 
         var deploymentName = Guid.NewGuid().ToString();
         var input = new ArmDeploymentContent(new ArmDeploymentProperties(ArmDeploymentMode.Incremental)
@@ -236,5 +238,15 @@ public class Parser
         }
 
         sw.Stop();
+    }
+
+    private static string GetUniqueString(string sub, string rgPrefix)
+    {
+        var text = $"{sub}-{rgPrefix}";
+        if (string.IsNullOrEmpty(text))
+            return string.Empty;
+        byte[] textData = System.Text.Encoding.UTF8.GetBytes(text);
+        byte[] hash = SHA256.HashData(textData);
+        return BitConverter.ToString(hash).Replace("-", string.Empty).ToLower();
     }
 }

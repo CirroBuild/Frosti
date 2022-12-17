@@ -13,6 +13,9 @@
       "userPrincipalId": {
         "type": "string"
       },
+      "webAppName": {
+        "type": "string"
+      },
       "linuxFxVersion": {
         "type": "string"
       },
@@ -23,7 +26,6 @@
     "variables": {
       "globalResourceGroupName": "[format('{0}-Global', parameters('projectName'))]",
       "webPlanName": "[format('Plan-{0}', parameters('projectName'))]",
-      "regionalWebAppName": "[format('{0}Web-{1}', parameters('projectName'), parameters('location'))]",
       "keyVaultName": "[format('{0}-kv-{1}', parameters('projectName'), parameters('location'))]",
       "managedIdentityResourceId": "[resourceID(variables('globalResourceGroupName'), 'Microsoft.ManagedIdentity/userAssignedIdentities/', format('{0}-managedidentity', parameters('projectName')))]"
     },
@@ -32,7 +34,7 @@
         "condition": "[contains(parameters('services'), 'WebApp')]",
         "type": "Microsoft.Web/sites",
         "apiVersion": "2022-03-01",
-        "name": "[variables('regionalWebAppName')]",
+        "name": "[parameters('webAppName')]",
         "location": "[parameters('location')]",
         "properties": {
           "httpsOnly": true,
@@ -50,7 +52,6 @@
         }
       },
       {
-        "condition": "[contains(parameters('services'), 'KeyVault')]",
         "type": "Microsoft.KeyVault/vaults",
         "apiVersion": "2022-07-01",
         "name": "[take(variables('keyVaultName'),24)]",
@@ -79,7 +80,7 @@
         }
       },
       {
-        "condition": "[and(contains(parameters('services'), 'KeyVault'), contains(parameters('services'), 'DevUser'))]",
+        "condition": "[contains(parameters('services'), 'DevUser')]",
         "type": "Microsoft.KeyVault/vaults/accessPolicies",
         "name": "[concat(take(variables('keyVaultName'),24), '/add')]",
         "apiVersion": "2019-09-01",
