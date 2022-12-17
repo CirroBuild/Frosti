@@ -73,15 +73,6 @@ public class Parser
             }
         }
 
-        if (services.Contains(Services.WebApp) || services.Contains(Services.FunctionApp))
-        {
-            var regex = new Regex("<TargetFramework>(.*)</TargetFramework>");
-            var v = regex.Match(csprojData);
-            var s = v.Groups[1].ToString();
-
-            configs.Add("__LINUXVERSION__", "DOTNETCORE|" + s.Replace("net", ""));
-        }
-
         var credential = new AzureCliCredential();
 
         if (env.Equals("dev"))
@@ -130,6 +121,17 @@ public class Parser
         var resourceGroups = subscription.GetResourceGroups();
         var rgPrefix = $"{infraPrefix}-{env}";
         var uniqueString = GetUniqueString(subscription.Data.SubscriptionId, rgPrefix);
+
+        if (services.Contains(Services.WebApp) || services.Contains(Services.FunctionApp))
+        {
+            var regex = new Regex("<TargetFramework>(.*)</TargetFramework>");
+            var v = regex.Match(csprojData);
+            var s = v.Groups[1].ToString();
+
+            configs.Add("__LINUXVERSION__", "DOTNETCORE|" + s.Replace("net", ""));
+            configs.Add("__WEBPLANNAME__", $"{infraPrefix}-WebPlan-{uniqueString}".Substring(0,40));
+            configs.Add("__FUNCTIONPLANNAME__", $"{infraPrefix}-FunctionPlan-{uniqueString}".Substring(0,40));
+        }
 
         //Global Deploy -> Change this name to Primary
         Console.WriteLine($"Creating the Global Resource Group");

@@ -5,8 +5,14 @@
   "userPrincipalId": {
     "value": "__USERPRINCIPALID__"
   },
+  "webPlanName": {
+    "value": "__WEBPLANNAME__"
+  },
   "webAppName": {
     "value": "__WEBAPPNAME__"
+  },
+  "keyVaultName": {
+    "value": "__KEYVAULTNAME__"
   },
   "linuxFxVersion": {
     "value": "__LINUXVERSION__"

@@ -13,7 +13,13 @@
       "userPrincipalId": {
         "type": "string"
       },
+      "webPlanName": {
+        "type": "string"
+      },
       "webAppName": {
+        "type": "string"
+      },
+      "keyVaultName": {
         "type": "string"
       },
       "linuxFxVersion": {
@@ -25,8 +31,6 @@
     },
     "variables": {
       "globalResourceGroupName": "[format('{0}-Global', parameters('projectName'))]",
-      "webPlanName": "[format('Plan-{0}', parameters('projectName'))]",
-      "keyVaultName": "[format('{0}-kv-{1}', parameters('projectName'), parameters('location'))]",
       "managedIdentityResourceId": "[resourceID(variables('globalResourceGroupName'), 'Microsoft.ManagedIdentity/userAssignedIdentities/', format('{0}-managedidentity', parameters('projectName')))]"
     },
     "resources": [
@@ -38,7 +42,7 @@
         "location": "[parameters('location')]",
         "properties": {
           "httpsOnly": true,
-          "serverFarmId": "[resourceId(variables('globalResourceGroupName'), 'Microsoft.Web/serverfarms', variables('webPlanName'))]",
+          "serverFarmId": "[resourceId(variables('globalResourceGroupName'), 'Microsoft.Web/serverfarms', parameters('webPlanName'))]",
           "siteConfig": {
             "linuxFxVersion": "[parameters('linuxFxVersion')]",
             "minTlsVersion": "1.2"
@@ -54,7 +58,7 @@
       {
         "type": "Microsoft.KeyVault/vaults",
         "apiVersion": "2022-07-01",
-        "name": "[take(variables('keyVaultName'),24)]",
+        "name": "[parameters('keyVaultName')]",
         "location": "[parameters('location')]",
         "properties": {
           "enabledForDeployment": true,
