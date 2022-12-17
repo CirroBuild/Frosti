@@ -21,8 +21,8 @@ public class Parser
 
     public static async Task<int> Main(string[] args)
     {
-        var supportedEnvs = new List<string>() {"test", "dev", "prod" };
-        var services = new HashSet<string>();
+        var supportedEnvs = new List<string>() { "test", "dev", "prod" };
+        var services = new HashSet<string>() { Services.ManagedIdentity, Services.KeyVault };
         var configs = new Dictionary<string, string>();
         var infraPrefix = args[0];
         var csprojData = "";
@@ -86,7 +86,7 @@ public class Parser
             if (principalId != null)
             {
                 configs.Add("__USERPRINCIPALID__", principalId);
-                services.Add("DevUser");
+                services.Add(Services.DevUser);
             }
         }
 
@@ -107,7 +107,8 @@ public class Parser
 
         Console.WriteLine($"Using subscription: {subscription.Data.SubscriptionId}");
         //Console.WriteLine($"Configs: {string.Join(" ",configs)}");
-        Console.WriteLine($"Services to be provisioned: Managed Identity (required), Keyvault (required), {string.Join(", ",services.Where(x=>x.Equals("DevUser") == false))}");
+        List<string> ignoreServices = new() { Services.DevUser, Services.ManagedIdentity, Services.KeyVault };
+        Console.WriteLine($"Services to be provisioned: Managed Identity (required), Keyvault (required), {string.Join(", ",services.Where(x=> ignoreServices.Contains(x) == false))}");
 
         Console.WriteLine("Is this correct? (Y/n)");
         string userinput = Console.ReadLine();
@@ -133,14 +134,17 @@ public class Parser
             configs.Add("__FUNCTIONPLANNAME__", $"{infraPrefix}-FunctionPlan-{uniqueString}".Substring(0,40));
         }
 
-        //Global Deploy -> Change this name to Primary
-        Console.WriteLine($"Creating the Global Resource Group");
-        var operation = await resourceGroups.CreateOrUpdateAsync(WaitUntil.Completed, $"{rgPrefix}-Global", new ResourceGroupData(AzureLocation.CentralUS));
-        var globalResourceGroup = operation.Value;
-        var ArmDeploymentCollection = globalResourceGroup.GetArmDeployments();
+        var primaryRegionResourceGroupName = $"{rgPrefix}-Primary";
+        configs.Add("__PRIMARYRGNAME__", primaryRegionResourceGroupName);
 
-        var globalServiceNames = new ServiceNames(infraPrefix, env, uniqueString, AzureLocation.CentralUS);
-        await Provision(ArmDeploymentCollection, globalServiceNames, configs, services, "Global");
+        //Primary Deploy
+        Console.WriteLine($"Creating the Primary Region Resource Group");
+        var operation = await resourceGroups.CreateOrUpdateAsync(WaitUntil.Completed, primaryRegionResourceGroupName, new ResourceGroupData(AzureLocation.CentralUS));
+        var primaryResourceGroup = operation.Value;
+        var ArmDeploymentCollection = primaryResourceGroup.GetArmDeployments();
+
+        var primaryServiceNames = new ServiceNames(infraPrefix, env, uniqueString, AzureLocation.CentralUS);
+        await Provision(ArmDeploymentCollection, primaryServiceNames, configs, services, "Primary");
 
         //Regional Deploys
         Console.WriteLine($"Creating the {AzureLocation.CentralUS} Resource Group");
@@ -177,7 +181,7 @@ public class Parser
 
         Console.WriteLine($"Completed Provisioning");
 
-        //Split out global region and primary region
+        //Split out primary region and primary region
 
 
         //Could Have a deploy failover region section

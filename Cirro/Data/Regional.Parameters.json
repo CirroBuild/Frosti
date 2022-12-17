@@ -2,6 +2,12 @@
   "projectName": {
     "value": "__PROJECTNAME__"
   },
+  "primaryRegionResourceGroupName": {
+    "value": "__PRIMARYRGNAME__"
+  },
+  "managedIdentityName": {
+    "value": "__MANAGEDIDENTITYNAME__"
+  },
   "userPrincipalId": {
     "value": "__USERPRINCIPALID__"
   },

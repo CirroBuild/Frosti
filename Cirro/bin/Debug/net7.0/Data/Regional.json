@@ -10,7 +10,13 @@
         "type": "string",
         "defaultValue": "[resourceGroup().location]"
       },
+      "managedIdentityName": {
+        "type": "string"
+      },
       "userPrincipalId": {
+        "type": "string"
+      },
+      "primaryRegionResourceGroupName": {
         "type": "string"
       },
       "webPlanName": {
@@ -30,8 +36,7 @@
       }
     },
     "variables": {
-      "globalResourceGroupName": "[format('{0}-Global', parameters('projectName'))]",
-      "managedIdentityResourceId": "[resourceID(variables('globalResourceGroupName'), 'Microsoft.ManagedIdentity/userAssignedIdentities/', format('{0}-managedidentity', parameters('projectName')))]"
+      "managedIdentityResourceId": "[resourceId(parameters('primaryRegionResourceGroupName'), 'Microsoft.ManagedIdentity/userAssignedIdentities/', parameters('managedIdentityName'))]"
     },
     "resources": [
       {
@@ -42,7 +47,7 @@
         "location": "[parameters('location')]",
         "properties": {
           "httpsOnly": true,
-          "serverFarmId": "[resourceId(variables('globalResourceGroupName'), 'Microsoft.Web/serverfarms', parameters('webPlanName'))]",
+          "serverFarmId": "[resourceId(parameters('primaryRegionResourceGroupName'), 'Microsoft.Web/serverfarms', parameters('webPlanName'))]",
           "siteConfig": {
             "linuxFxVersion": "[parameters('linuxFxVersion')]",
             "minTlsVersion": "1.2"
