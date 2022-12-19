@@ -3,9 +3,6 @@
     "contentVersion": "1.0.0.0",
 
     "parameters": {
-      "projectName": {
-        "type": "string"
-      },
       "location": {
         "type": "string",
         "defaultValue": "[resourceGroup().location]"
@@ -91,7 +88,7 @@
       {
         "condition": "[contains(parameters('services'), 'DevUser')]",
         "type": "Microsoft.KeyVault/vaults/accessPolicies",
-        "name": "[concat(take(variables('keyVaultName'),24), '/add')]",
+        "name": "[concat(parameters('keyVaultName'), '/add')]",
         "apiVersion": "2019-09-01",
         "properties": {
             "accessPolicies": [
@@ -108,7 +105,7 @@
             ]
         },
         "dependsOn": [
-          "[resourceId('Microsoft.KeyVault/vaults/',take(variables('keyVaultName'),24))]"
+          "[resourceId('Microsoft.KeyVault/vaults/',parameters('keyVaultName'))]"
         ]
       }
     ]

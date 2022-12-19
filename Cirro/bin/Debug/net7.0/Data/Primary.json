@@ -2,44 +2,68 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "projectName": {
-      "type": "string"
-    },
     "location": {
       "type": "string",
       "defaultValue": "[resourceGroup().location]"
+    },
+    "managedIdentityName": {
+      "type": "string"
+    },
+    "webPlanName": {
+      "type": "string"
+    },
+    "functionPlanName": {
+      "type": "string"
+    },
+    "functionAppName": {
+      "type": "string"
+    },
+    "appInsightsName": {
+      "type": "string"
+    },
+    "cosmosName": {
+      "type": "string"
+    },
+    "storageName": {
+      "type": "string"
+    },
+    "serviceBusName": {
+      "type": "string"
+    },
+    "eventHubName": {
+      "type": "string"
+    },
+    "redisCacheName": {
+      "type": "string"
+    },
+    "sqlServerName": {
+      "type": "string"
+    },
+    "mySqlServerName": {
+      "type": "string"
+    },
+    "postgreSqlServerName": {
+      "type": "string"
     },
     "services": {
       "type": "array"
     }
   },
   "variables": {
-    "webPlanName": "[format('Plan-{0}', parameters('projectName'))]",
-    "functionPlanName": "[format('FunctionPlan-{0}', parameters('projectName'))]",
-    "functionAppName": "[format('{0}FunctionApp', parameters('projectName'))]",
-    "managedIdentityName": "[format('{0}-managedidentity', parameters('projectName'))]",
-    "appInsightsName": "[format('{0}-appinsights', parameters('projectName'))]",
-    "cosmosName": "[format('{0}cosmos', parameters('projectName'))]",
-    "storageName": "[format('{0}storage', parameters('projectName'))]",
-    "serviceBusName": "[format('{0}-servicebus', parameters('projectName'))]",
-    "eventHubName": "[format('{0}-eventhub', parameters('projectName'))]",
-    "redisCacheName": "[format('{0}-redis', parameters('projectName'))]",
-    "sqlServerName": "[format('{0}-sqlserver', parameters('projectName'))]",
-    "mySqlServerName": "[format('{0}-mysqlserver', parameters('projectName'))]",
-    "postgreSqlServerName": "[format('{0}-postgresqlserver', parameters('projectName'))]"
+    "managedIdentityResourceId": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities/', parameters('managedIdentityName'))]"
   },
   "resources": [
     {
       "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
       "apiVersion": "2022-01-31-preview",
-      "name": "[variables('managedIdentityName')]",
+      "name": "[parameters('managedIdentityName')]",
       "location": "[parameters('location')]"
     },
     {
       "condition": "[contains(parameters('services'), 'ApplicationInsights')]",
       "type": "Microsoft.Insights/components",
       "apiVersion": "2020-02-02",
-      "name": "[variables('appInsightsName')]",
+      "name": "[parameters('appInsightsName')]",
       "location": "[parameters('location')]",
       "kind": "web",
       "properties": {
@@ -51,7 +75,7 @@
       "condition": "[contains(parameters('services'), 'WebApp')]",
       "type": "Microsoft.Web/serverfarms",
       "apiVersion": "2021-02-01",
-      "name": "[variables('webPlanName')]",
+      "name": "[parameters('webPlanName')]",
       "location": "[parameters('location')]",
       "sku": {
         "name": "F1"
@@ -65,7 +89,7 @@
       "condition": "[contains(parameters('services'), 'FunctionApp')]",
       "type": "Microsoft.Web/serverfarms",
       "apiVersion": "2021-02-01",
-      "name": "[variables('functionPlanName')]",
+      "name": "[parameters('functionPlanName')]",
       "location": "[parameters('location')]",
       "sku": {
         "name": "Y1"
@@ -75,29 +99,29 @@
       "condition": "[contains(parameters('services'), 'FunctionApp')]",
       "type": "Microsoft.Web/sites",
       "apiVersion": "2022-03-01",
-      "name": "[variables('functionAppName')]",
+      "name": "[parameters('functionAppName')]",
       "location": "[parameters('location')]",
       "kind": "functionapp",
       "properties": {
         "httpsOnly": true,
-        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('functionPlanName'))]",
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('functionPlanName'))]",
         "siteConfig": {
           "minTlsVersion": "1.2"
         }
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Web/serverfarms/',variables('functionPlanName'))]"
+        "[resourceId('Microsoft.Web/serverfarms/',parameters('functionPlanName'))]"
       ],
       "identity": {
         "type": "userAssigned",
         "userAssignedIdentities": {
-            "[resourceID('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('managedIdentityName'))]": {}
+              "[variables('managedIdentityResourceId')]": {}
         }
       }
     },
     {
       "condition": "[contains(parameters('services'), 'Cosmos')]",
-      "name": "[take(toLower(concat(variables('cosmosName'), uniqueString(resourceGroup().id))),44)]",
+      "name": "[take(toLower(concat(parameters('cosmosName'), uniqueString(resourceGroup().id))),44)]",
       "type": "Microsoft.DocumentDB/databaseAccounts",
       "apiVersion": "2022-08-15",
       "location": "[parameters('location')]",
@@ -120,18 +144,18 @@
       "identity": {
         "type": "userAssigned",
         "userAssignedIdentities": {
-            "[resourceID('Microsoft.ManagedIdentity/userAssignedIdentities/',variables('managedIdentityName'))]": {}
+              "[variables('managedIdentityResourceId')]": {}
         }
       },
       "dependsOn": [
-        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities/',variables('managedIdentityName'))]"
+        "[variables('managedIdentityResourceId')]"
       ]
     },
     {
       "condition": "[contains(parameters('services'), 'Storage')]",
       "type": "Microsoft.Storage/storageAccounts",
       "apiVersion": "2021-09-01",
-      "name": "[take(toLower(concat(variables('storageName'), uniqueString(resourceGroup().id))),24)]",
+      "name": "[parameters('storageName')]",
       "location": "[parameters('location')]",
       "sku": {
         "name": "Standard_LRS",
@@ -141,7 +165,7 @@
       "identity": {
         "type": "userAssigned",
         "userAssignedIdentities": {
-            "[resourceID('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('managedIdentityName'))]": {}
+              "[variables('managedIdentityResourceId')]": {}
         }
       },
       "properties": {
@@ -152,7 +176,7 @@
       "condition": "[contains(parameters('services'), 'ServiceBus')]",
       "type": "Microsoft.ServiceBus/Namespaces",
       "apiVersion": "2021-11-01",
-      "name": "[variables('serviceBusName')]",
+      "name": "[parameters('serviceBusName')]",
       "location": "[resourceGroup().location]",
       "sku": {
         "name": "Basic"
@@ -160,7 +184,7 @@
       "identity": {
         "type": "userAssigned",
         "userAssignedIdentities": {
-            "[resourceID('Microsoft.ManagedIdentity/userAssignedIdentities/',variables('managedIdentityName'))]": {}
+              "[variables('managedIdentityResourceId')]": {}
         }
       }
     },
@@ -168,7 +192,7 @@
       "condition": "[contains(parameters('services'), 'EventHubs')]",
       "type": "Microsoft.EventHub/namespaces",
       "apiVersion": "2021-11-01",
-      "name": "[variables('eventHubName')]",
+      "name": "[parameters('eventHubName')]",
       "location": "[parameters('location')]",
       "sku": {
         "name": "Basic",
@@ -181,7 +205,7 @@
       "identity": {
         "type": "userAssigned",
         "userAssignedIdentities": {
-            "[resourceID('Microsoft.ManagedIdentity/userAssignedIdentities/',variables('managedIdentityName'))]": {}
+              "[variables('managedIdentityResourceId')]": {}
         }
       }
     },
@@ -189,7 +213,7 @@
       "condition": "[contains(parameters('services'), 'Redis')]",
       "type": "Microsoft.Cache/redis",
       "apiVersion": "2022-06-01",
-      "name": "[variables('redisCacheName')]",
+      "name": "[parameters('redisCacheName')]",
       "location": "[parameters('location')]",
       "properties": {
         "enableNonSslPort": true,
@@ -203,7 +227,7 @@
       "identity": {
         "type": "userAssigned",
         "userAssignedIdentities": {
-            "[resourceID('Microsoft.ManagedIdentity/userAssignedIdentities/',variables('managedIdentityName'))]": {}
+              "[variables('managedIdentityResourceId')]": {}
         }
       }
     },
@@ -211,18 +235,18 @@
       "condition": "[contains(parameters('services'), 'SQL')]",
       "type": "Microsoft.Sql/servers",
       "apiVersion": "2022-05-01-preview",
-      "name": "[variables('sqlServerName')]",
+      "name": "[parameters('sqlServerName')]",
       "location": "[parameters('location')]",
       "identity": {
         "type": "userAssigned",
         "userAssignedIdentities": {
-            "[resourceID('Microsoft.ManagedIdentity/userAssignedIdentities/',variables('managedIdentityName'))]": {}
+              "[variables('managedIdentityResourceId')]": {}
         }
       },
       "properties": {
         "administratorLogin": "CirroAdmin",
         "administratorLoginPassword": "!!CirroBuild1010!!",
-        "primaryUserAssignedIdentityId": "[resourceID('Microsoft.ManagedIdentity/userAssignedIdentities/',variables('managedIdentityName'))]",
+        "primaryUserAssignedIdentityId": "[variables('managedIdentityResourceId')]]",
         "minimalTlsVersion": "1.2"
       }
     },
@@ -230,7 +254,7 @@
       "condition": "[contains(parameters('services'), 'MySql')]",
       "type": "Microsoft.DBforMySQL/servers",
       "apiVersion": "2017-12-01",
-      "name": "[variables('mySqlServerName')]",
+      "name": "[parameters('mySqlServerName')]",
       "location": "[parameters('location')]",
       "sku": {
         "name": "B_Gen5_1"
@@ -246,7 +270,7 @@
       "condition": "[contains(parameters('services'), 'PostgreSQL')]",
       "type": "Microsoft.DBforPostgreSQL/servers",
       "apiVersion": "2017-12-01",
-      "name": "[toLower(concat(variables('postgreSqlServerName'), uniqueString(resourceGroup().id)))]",
+      "name": "[parameters('postgreSqlServerName')]",
       "location": "[parameters('location')]",
       "sku": {
         "name": "B_Gen5_1"

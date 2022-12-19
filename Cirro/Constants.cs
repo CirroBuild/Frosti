@@ -39,6 +39,12 @@ public static class Services
     };
 };
 
+
+public static class Enviornments
+{
+    public static readonly List<string> SupportedEnviornments = new() { "test", "dev", "prod" };
+};
+
 public static class Locations
 {
     public static readonly Dictionary<string, string> ShortName = new()

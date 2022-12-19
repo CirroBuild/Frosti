@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reflection.Metadata;
 using System.Security.Claims;
@@ -21,39 +22,43 @@ public class Parser
 
     public static async Task<int> Main(string[] args)
     {
-        var supportedEnvs = new List<string>() { "test", "dev", "prod" };
         var services = new HashSet<string>() { Services.ManagedIdentity, Services.KeyVault };
         var configs = new Dictionary<string, string>();
-        var infraPrefix = args[0];
         var csprojData = "";
-        var env = "";
+
+        //use args[0] to split between az/azure, aws, gcp etc. they should all split into their own functions
 
         if (args.Length < 1 || args[0].Length > 9)
         {
             Console.WriteLine("The Infra Prefix is missing or longer than 10 character. Please see doc {insert doc link}");
-            return 0;
+            return 1;
         }
 
-        Console.WriteLine($"Launched from {Environment.CurrentDirectory}"); // <- find all csproj in current directory and combine them as string
+        var infraPrefix = args[0];
+        var env = args.Length > 1 ? args[1] : "";
+        if (Enviornments.SupportedEnviornments.Contains(env) == false)
+        {
+            Console.WriteLine($"Enviornment is missing or {env} is not a supported enviornment. Please selet from: {string.Join(", ", Enviornments.SupportedEnviornments)}");
+            return 1;
+        }
+
+        var csprojFiles = System.IO.Directory.GetFiles(Environment.CurrentDirectory, "*.csproj", SearchOption.AllDirectories);
+        if (csprojFiles.Length < 1)
+        {
+            Console.WriteLine($"No csproj file is found within this project. Please go to the root directory and try again");
+        }
+        //Console.WriteLine($"Launched from {Environment.CurrentDirectory}"); // <- find all csproj in current directory and combine them as string
         //Console.WriteLine($"Physical location {AppDomain.CurrentDomain.BaseDirectory}");
         //Console.WriteLine($"AppContext.BaseDir {AppContext.BaseDirectory}");
         //return 0;
 
         try
         {
-            var filepath = args[1];
-            env = args[2];
-
-            //check args, i.e. is env of expected value, is filePath openable etc.
-            if (supportedEnvs.Contains(env) == false)
+            foreach (var csprojFile in csprojFiles)
             {
-                Console.WriteLine($"Enviornment {env} is not a supported enviornment. Please selet from: {string.Join(", ", supportedEnvs)}");
-                return 1;
+                using var reader = new StreamReader(csprojFile);
+                csprojData += await reader.ReadToEndAsync();
             }
-
-            // Attempt to open input file.
-            using var reader = new StreamReader(filepath);
-            csprojData = await reader.ReadToEndAsync();
         }
         catch (IOException e)
         {
@@ -63,7 +68,6 @@ public class Parser
         }
 
         Console.WriteLine($"InfraPrefix: {infraPrefix}");
-        configs.Add("__PROJECTNAME__", infraPrefix);
 
         foreach (var sdkToService in Services.SdkToServices)
         {
@@ -125,7 +129,7 @@ public class Parser
 
         if (services.Contains(Services.WebApp) || services.Contains(Services.FunctionApp))
         {
-            var regex = new Regex("<TargetFramework>(.*)</TargetFramework>");
+            var regex = new Regex("<TargetFramework>(.*)</TargetFramework>");   //since combining csproj, could have multiple target frameworks here
             var v = regex.Match(csprojData);
             var s = v.Groups[1].ToString();
 

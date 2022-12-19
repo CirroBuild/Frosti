@@ -1,6 +1,42 @@
 {
-  "projectName": {
-    "value": "__PROJECTNAME__"
+  "managedIdentityName": {
+    "value": "__MANAGEDIDENTITYNAME__"
+  },
+  "webPlanName": {
+    "value": "__WEBPLANNAME__"
+  },
+  "functionPlanName": {
+    "value": "__FUNCTIONPLANNAME__"
+  },
+  "functionAppName": {
+    "value": "__FUNCTIONAPPNAME__"
+  },
+  "appInsightsName": {
+    "value": "__APPINSIGHTSNAME__"
+  },
+  "cosmosName": {
+    "value": "__COSMOSNAME__"
+  },
+  "storageName": {
+    "value": "__STORAGENAME__"
+  },
+  "serviceBusName": {
+    "value": "__SERVICEBUSNAME__"
+  },
+  "eventHubName": {
+    "value": "__EVENTHUBSNAME__"
+  },
+  "redisCacheName": {
+    "value": "__REDISNAME__"
+  },
+  "sqlServerName": {
+    "value": "__SQLNAME__"
+  },
+  "mySqlServerName": {
+    "value": "__MYSQLNAME__"
+  },
+  "postgreSqlServerName": {
+    "value": "__POSTGRESQLNAME__"
   },
   "services": {
     "value": "__SERVICES__"

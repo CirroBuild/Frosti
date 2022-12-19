@@ -1,7 +1,4 @@
 {
-  "projectName": {
-    "value": "__PROJECTNAME__"
-  },
   "primaryRegionResourceGroupName": {
     "value": "__PRIMARYRGNAME__"
   },
