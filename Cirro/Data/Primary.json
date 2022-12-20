@@ -110,12 +110,13 @@
         }
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Web/serverfarms/',parameters('functionPlanName'))]"
+        "[resourceId('Microsoft.Web/serverfarms/',parameters('functionPlanName'))]",
+        "[variables('managedIdentityResourceId')]"
       ],
       "identity": {
         "type": "userAssigned",
         "userAssignedIdentities": {
-              "[variables('managedIdentityResourceId')]": {}
+          "[variables('managedIdentityResourceId')]": {}
         }
       }
     },
@@ -144,7 +145,7 @@
       "identity": {
         "type": "userAssigned",
         "userAssignedIdentities": {
-              "[variables('managedIdentityResourceId')]": {}
+          "[variables('managedIdentityResourceId')]": {}
         }
       },
       "dependsOn": [
@@ -165,12 +166,15 @@
       "identity": {
         "type": "userAssigned",
         "userAssignedIdentities": {
-              "[variables('managedIdentityResourceId')]": {}
+          "[variables('managedIdentityResourceId')]": {}
         }
       },
       "properties": {
         "accessTier": "Hot"
-      }
+      },
+      "dependsOn": [
+        "[variables('managedIdentityResourceId')]"
+      ]
     },
     {
       "condition": "[contains(parameters('services'), 'ServiceBus')]",
@@ -184,9 +188,12 @@
       "identity": {
         "type": "userAssigned",
         "userAssignedIdentities": {
-              "[variables('managedIdentityResourceId')]": {}
+          "[variables('managedIdentityResourceId')]": {}
         }
-      }
+      },
+      "dependsOn": [
+        "[variables('managedIdentityResourceId')]"
+      ]
     },
     {
       "condition": "[contains(parameters('services'), 'EventHubs')]",
@@ -205,9 +212,12 @@
       "identity": {
         "type": "userAssigned",
         "userAssignedIdentities": {
-              "[variables('managedIdentityResourceId')]": {}
+          "[variables('managedIdentityResourceId')]": {}
         }
-      }
+      },
+      "dependsOn": [
+        "[variables('managedIdentityResourceId')]"
+      ]
     },
     {
       "condition": "[contains(parameters('services'), 'Redis')]",
@@ -227,9 +237,12 @@
       "identity": {
         "type": "userAssigned",
         "userAssignedIdentities": {
-              "[variables('managedIdentityResourceId')]": {}
+          "[variables('managedIdentityResourceId')]": {}
         }
-      }
+      },
+      "dependsOn": [
+        "[variables('managedIdentityResourceId')]"
+      ]
     },
     {
       "condition": "[contains(parameters('services'), 'SQL')]",
@@ -240,15 +253,18 @@
       "identity": {
         "type": "userAssigned",
         "userAssignedIdentities": {
-              "[variables('managedIdentityResourceId')]": {}
+          "[variables('managedIdentityResourceId')]": {}
         }
       },
       "properties": {
         "administratorLogin": "CirroAdmin",
         "administratorLoginPassword": "!!CirroBuild1010!!",
-        "primaryUserAssignedIdentityId": "[variables('managedIdentityResourceId')]]",
+        "primaryUserAssignedIdentityId": "[variables('managedIdentityResourceId')]",
         "minimalTlsVersion": "1.2"
-      }
+      },
+      "dependsOn": [
+        "[variables('managedIdentityResourceId')]"
+      ]
     },
     {
       "condition": "[contains(parameters('services'), 'MySql')]",

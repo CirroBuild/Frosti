@@ -1,10 +1,5 @@
 ﻿using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Reflection.Metadata;
-using System.Security.Claims;
 using System.Security.Cryptography;
-using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using Azure;
 using Azure.Core;
@@ -13,8 +8,6 @@ using Azure.ResourceManager;
 using Azure.ResourceManager.Resources;
 using Azure.ResourceManager.Resources.Models;
 using Microsoft.Graph;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace Cirro;
 public class Parser
@@ -22,25 +15,59 @@ public class Parser
 
     public static async Task<int> Main(string[] args)
     {
-        var services = new HashSet<string>() { Services.ManagedIdentity, Services.KeyVault };
-        var configs = new Dictionary<string, string>();
-        var csprojData = "";
+        var cloud = args.Length > 0 ? args[0] : "";
+        if (Clouds.SupportedClouds.Contains(cloud) == false)
+        {
+            Console.WriteLine($"Please specify the cloud to create the infrastructure. Select from: {string.Join(", ", Clouds.SupportedClouds)}");
+            return 1;
+        }
 
-        //use args[0] to split between az/azure, aws, gcp etc. they should all split into their own functions
-
-        if (args.Length < 1 || args[0].Length > 9)
+        if (args.Length < 2 || args[1].Length > 9)
         {
             Console.WriteLine("The Infra Prefix is missing or longer than 10 character. Please see doc {insert doc link}");
             return 1;
         }
-
         var infraPrefix = args[0];
-        var env = args.Length > 1 ? args[1] : "";
+
+        var env = args.Length > 2 ? args[2] : "";
         if (Enviornments.SupportedEnviornments.Contains(env) == false)
         {
-            Console.WriteLine($"Enviornment is missing or {env} is not a supported enviornment. Please selet from: {string.Join(", ", Enviornments.SupportedEnviornments)}");
+            Console.WriteLine($"Enviornment is missing or {env} is not a supported enviornment. Please select from: {string.Join(", ", Enviornments.SupportedEnviornments)}");
             return 1;
         }
+
+        var subId = args.Length > 3 ? args[3] : null;
+
+        switch (cloud)
+        {
+            case "azure":
+                return await ProvisionAzure(infraPrefix, env, subId);
+            case "aws":
+                return ProvisionAWS(infraPrefix, env);
+            case "gcp":
+                return ProvisionGCP(infraPrefix, env);
+        }
+
+        return 1;
+    }
+
+    private static int ProvisionAWS(string infraPrefix, string env)
+    {
+        Console.WriteLine("Automatically provisioning AWS resources is not currently supported. It's coming soon! Please try provisioning via azure for now.");
+        return 0;
+    }
+
+    private static int ProvisionGCP(string infraPrefix, string env)
+    {
+        Console.WriteLine("Automatically provisioning GCP resources is not currently supported. It's coming soon! Please try provisioning via azure for now.");
+        return 0;
+    }
+
+    private static async Task<int> ProvisionAzure(string infraPrefix, string env, string? subId)
+    {
+        var services = new HashSet<string>() { Services.ManagedIdentity, Services.KeyVault };
+        var configs = new Dictionary<string, string>();
+        var csprojData = "";
 
         var csprojFiles = System.IO.Directory.GetFiles(Environment.CurrentDirectory, "*.csproj", SearchOption.AllDirectories);
         if (csprojFiles.Length < 1)
@@ -99,25 +126,25 @@ public class Parser
         var client = new ArmClient(credential);
         SubscriptionResource subscription;
 
-        if (args.Length < 3)
+        if (subId == null)
         {
             subscription = await client.GetDefaultSubscriptionAsync();
         }
         else
         {
             var subs = client.GetSubscriptions();
-            subscription = subs.FirstOrDefault(x => x.Data.SubscriptionId == args[2]) ?? await client.GetDefaultSubscriptionAsync();    //shouldn't default, should throw error instead
+            subscription = subs.FirstOrDefault(x => x.Data.SubscriptionId == subId) ?? await client.GetDefaultSubscriptionAsync();    //shouldn't default, should throw error instead
         }
 
         Console.WriteLine($"Using subscription: {subscription.Data.SubscriptionId}");
         //Console.WriteLine($"Configs: {string.Join(" ",configs)}");
         List<string> ignoreServices = new() { Services.DevUser, Services.ManagedIdentity, Services.KeyVault };
-        Console.WriteLine($"Services to be provisioned: Managed Identity (required), Keyvault (required), {string.Join(", ",services.Where(x=> ignoreServices.Contains(x) == false))}");
+        Console.WriteLine($"Services to be provisioned: Managed Identity (required), Keyvault (required), {string.Join(", ", services.Where(x => ignoreServices.Contains(x) == false))}");
 
         Console.WriteLine("Is this correct? (Y/n)");
-        string userinput = Console.ReadLine();
+        string? userinput = Console.ReadLine();
 
-        if (userinput.Trim().ToLower() != "y" && userinput.Trim().ToLower() != "yes")
+        if (userinput?.Trim().ToLower() != "y" && userinput?.Trim().ToLower() != "yes")
         {
             Console.WriteLine("Exiting. Nothing has been provisioned.");
             return 0;
@@ -134,8 +161,8 @@ public class Parser
             var s = v.Groups[1].ToString();
 
             configs.Add("__LINUXVERSION__", "DOTNETCORE|" + s.Replace("net", ""));
-            configs.Add("__WEBPLANNAME__", $"{infraPrefix}-WebPlan-{uniqueString}".Substring(0,40));
-            configs.Add("__FUNCTIONPLANNAME__", $"{infraPrefix}-FunctionPlan-{uniqueString}".Substring(0,40));
+            configs.Add("__WEBPLANNAME__", $"{infraPrefix}-WebPlan-{uniqueString}".Substring(0, 40));
+            configs.Add("__FUNCTIONPLANNAME__", $"{infraPrefix}-FunctionPlan-{uniqueString}".Substring(0, 40));
         }
 
         var primaryRegionResourceGroupName = $"{rgPrefix}-Primary";
@@ -206,14 +233,15 @@ public class Parser
     {
         Console.WriteLine($"Deploying the {templateName} Resources. This may take a while.");
 
-        var template = System.IO.File.ReadAllText($"Data/{templateName}.json");
-        var parameters = System.IO.File.ReadAllText($"Data/{templateName}.Parameters.json");
+        var template = System.IO.File.ReadAllText($"{AppDomain.CurrentDomain.BaseDirectory}Data/{templateName}.json");
+        var parameters = System.IO.File.ReadAllText($"{AppDomain.CurrentDomain.BaseDirectory}Data/{templateName}.Parameters.json");
 
         foreach (var config in configs)
         {
             parameters = parameters.Replace(config.Key, config.Value);
         }
 
+        //Need to do it this way with the double map because service name cahnges with region
         foreach (var service in services)
         {
             if (servceNames.ServiceNameMap.ContainsKey(service))
@@ -222,10 +250,6 @@ public class Parser
                 parameters = parameters.Replace(serviceName.Key, serviceName.Value);
             }
         }
-
-        Console.WriteLine(parameters);
-
-        return;
 
         var deploymentName = Guid.NewGuid().ToString();
         var input = new ArmDeploymentContent(new ArmDeploymentProperties(ArmDeploymentMode.Incremental)

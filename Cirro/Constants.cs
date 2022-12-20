@@ -1,9 +1,6 @@
-﻿using System;
-using System.Security.Cryptography.X509Certificates;
-using Azure.Core;
+﻿using Azure.Core;
 
 namespace Cirro;
-
 public static class Services
 {
     public static readonly string WebApp = "WebApp";
@@ -39,6 +36,10 @@ public static class Services
     };
 };
 
+public static class Clouds
+{
+    public static readonly List<string> SupportedClouds = new() { "azure", "aws", "gcp" };
+};
 
 public static class Enviornments
 {
@@ -50,6 +51,7 @@ public static class Locations
     public static readonly Dictionary<string, string> ShortName = new()
     {
         {AzureLocation.CentralUS, "cus"},
+        {AzureLocation.WestCentralUS, "wcus"},
         {AzureLocation.EastAsia, "ea"},
         {AzureLocation.WestEurope, "weu"},
     };
