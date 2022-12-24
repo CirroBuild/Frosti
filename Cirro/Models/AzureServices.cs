@@ -1,7 +1,7 @@
 ﻿using Azure.Core;
 
 namespace Cirro;
-public static class Services
+public static class AzureServices
 {
     public static readonly string WebApp = "WebApp";
     public static readonly string FunctionApp = "FunctionApp";
@@ -36,30 +36,9 @@ public static class Services
     };
 };
 
-public static class Clouds
+public class AzureServiceNames
 {
-    public static readonly List<string> SupportedClouds = new() { "azure", "aws", "gcp" };
-};
-
-public static class Enviornments
-{
-    public static readonly List<string> SupportedEnviornments = new() { "test", "dev", "prod" };
-};
-
-public static class Locations
-{
-    public static readonly Dictionary<string, string> ShortName = new()
-    {
-        {AzureLocation.CentralUS, "cus"},
-        {AzureLocation.WestCentralUS, "wcus"},
-        {AzureLocation.EastAsia, "ea"},
-        {AzureLocation.WestEurope, "weu"},
-    };
-};
-
-public class ServiceNames
-{
-    public ServiceNames(string infraPrefix, string env, string uniqueString, AzureLocation loc)
+    public AzureServiceNames(string infraPrefix, string env, string uniqueString, AzureLocation loc)
     {
         InfraPrefix = infraPrefix;
         Enviornment = env;
@@ -72,9 +51,9 @@ public class ServiceNames
     public AzureLocation Location { get; set; }
     public string UniqueString { get; set; }
 
-    public string ResourcePrefix => $"{InfraPrefix}-{Enviornment}-{Locations.ShortName[Location]}"; //takes up 20 chars
-    public string ResourcePrefixNoHyphen => $"{InfraPrefix}{Enviornment}{Locations.ShortName[Location]}".ToLower();
-    public string ResourcePrefixLower => $"{InfraPrefix.Substring(0,7)}-{Enviornment}-{Locations.ShortName[Location]}".ToLower();
+    public string ResourcePrefix => $"{InfraPrefix}-{Enviornment}-{AzureLocations.ShortName[Location]}"; //takes up 20 chars
+    public string ResourcePrefixNoHyphen => $"{InfraPrefix}{Enviornment}{AzureLocations.ShortName[Location]}".ToLower();
+    public string ResourcePrefixLower => $"{InfraPrefix.Substring(0,7)}-{Enviornment}-{AzureLocations.ShortName[Location]}".ToLower();
 
     public KeyValuePair<string, string> WebApp => new("__WEBAPPNAME__", $"{ResourcePrefix}-WebApp{UniqueString}".Substring(0, 32));
     public KeyValuePair<string, string> FunctionApp => new("__FUNCTIONAPPNAME__", $"{ResourcePrefix}-FunctionApp{UniqueString}".Substring(0, 32));
@@ -92,18 +71,18 @@ public class ServiceNames
 
     public Dictionary<string, KeyValuePair<string, string>> ServiceNameMap => new()
     {
-        {Services.WebApp, WebApp},
-        {Services.FunctionApp, FunctionApp},
-        {Services.Storage, Storage},
-        {Services.ServiceBus, ServiceBus},
-        {Services.EventHubs, EventHubs},
-        {Services.ApplicationInsights, ApplicationInsights},
-        {Services.Cosmos, Cosmos},
-        {Services.Redis, Redis},
-        {Services.SQL, SQL},
-        {Services.MySql, MySql},
-        {Services.PostgreSQL, PostgreSQL},
-        {Services.KeyVault, KeyVault},
-        {Services.ManagedIdentity, ManagedIdentity}
+        {AzureServices.WebApp, WebApp},
+        {AzureServices.FunctionApp, FunctionApp},
+        {AzureServices.Storage, Storage},
+        {AzureServices.ServiceBus, ServiceBus},
+        {AzureServices.EventHubs, EventHubs},
+        {AzureServices.ApplicationInsights, ApplicationInsights},
+        {AzureServices.Cosmos, Cosmos},
+        {AzureServices.Redis, Redis},
+        {AzureServices.SQL, SQL},
+        {AzureServices.MySql, MySql},
+        {AzureServices.PostgreSQL, PostgreSQL},
+        {AzureServices.KeyVault, KeyVault},
+        {AzureServices.ManagedIdentity, ManagedIdentity}
     };
 };

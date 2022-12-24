@@ -13,13 +13,12 @@ using Microsoft.Graph;
 namespace Cirro;
 public class Parser
 {
-
     public static async Task<int> Main(string[] args)
     {
         var cloud = args.Length > 0 ? args[0] : "";
-        if (Clouds.SupportedClouds.Contains(cloud) == false)
+        if (Constants.SupportedClouds.Contains(cloud) == false)
         {
-            Console.WriteLine($"Please specify the cloud to create the infrastructure. Select from: {string.Join(", ", Clouds.SupportedClouds)}");
+            Console.WriteLine($"Please specify the cloud to create the infrastructure. Select from: {string.Join(", ", Constants.SupportedClouds)}");
             return 1;
         }
 
@@ -31,9 +30,9 @@ public class Parser
         var infraPrefix = args[1];
 
         var env = args.Length > 2 ? args[2] : "";
-        if (Enviornments.SupportedEnviornments.Contains(env) == false)
+        if (Constants.SupportedEnviornments.Contains(env) == false)
         {
-            Console.WriteLine($"Enviornment is missing or {env} is not a supported enviornment. Please select from: {string.Join(", ", Enviornments.SupportedEnviornments)}");
+            Console.WriteLine($"Enviornment is missing or {env} is not a supported enviornment. Please select from: {string.Join(", ", Constants.SupportedEnviornments)}");
             return 1;
         }
 
@@ -66,7 +65,7 @@ public class Parser
 
     private static async Task<int> ProvisionAzure(string infraPrefix, string env, string? subId)
     {
-        var services = new HashSet<string>() { Services.ManagedIdentity, Services.KeyVault };
+        var services = new HashSet<string>() { AzureServices.ManagedIdentity, AzureServices.KeyVault };
         var configs = new Dictionary<string, string>();
         var csprojData = "";
 
@@ -97,7 +96,7 @@ public class Parser
 
         Console.WriteLine($"InfraPrefix: {infraPrefix}");
 
-        foreach (var sdkToService in Services.SdkToServices)
+        foreach (var sdkToService in AzureServices.SdkToServices)
         {
             if (csprojData.Contains(sdkToService.Key))
             {
@@ -118,11 +117,11 @@ public class Parser
             if (principalId != null)
             {
                 configs.Add("__USERPRINCIPALID__", principalId);
-                services.Add(Services.DevUser);
+                services.Add(AzureServices.DevUser);
             }
 
-            services.Remove(Services.WebApp);
-            services.Remove(Services.FunctionApp);
+            services.Remove(AzureServices.WebApp);
+            services.Remove(AzureServices.FunctionApp);
         }
 
         configs.Add("\"__SERVICES__\"", "[\"" + string.Join("\",\"", services) + "\"]");
@@ -154,7 +153,7 @@ public class Parser
         }
 
         Console.WriteLine($"Using subscription: {subscription.Data.SubscriptionId}");
-        List<string> ignoreServices = new() { Services.DevUser, Services.ManagedIdentity, Services.KeyVault };
+        List<string> ignoreServices = new() { AzureServices.DevUser, AzureServices.ManagedIdentity, AzureServices.KeyVault };
         Console.WriteLine($"Services to be provisioned: Managed Identity (required), Keyvault (required), {string.Join(", ", services.Where(x => ignoreServices.Contains(x) == false))}");
 
         Console.WriteLine("Is this correct? (Y/n)");
@@ -170,7 +169,7 @@ public class Parser
         var rgPrefix = $"{infraPrefix}-{env}";
         var uniqueString = GetUniqueString(subscription.Data.SubscriptionId, rgPrefix);
 
-        if (services.Contains(Services.WebApp) || services.Contains(Services.FunctionApp))
+        if (services.Contains(AzureServices.WebApp) || services.Contains(AzureServices.FunctionApp))
         {
             var regex = new Regex("<TargetFramework>(.*)</TargetFramework>");   //since combining csproj, could have multiple target frameworks here
             var v = regex.Match(csprojData);
@@ -190,7 +189,7 @@ public class Parser
         var primaryResourceGroup = operation.Value;
         var ArmDeploymentCollection = primaryResourceGroup.GetArmDeployments();
 
-        var primaryServiceNames = new ServiceNames(infraPrefix, env, uniqueString, AzureLocation.CentralUS);
+        var primaryServiceNames = new AzureServiceNames(infraPrefix, env, uniqueString, AzureLocation.CentralUS);
         await Provision(ArmDeploymentCollection, primaryServiceNames, configs, services, env, "Primary");
 
         //Regional Deploys
@@ -199,7 +198,7 @@ public class Parser
         var regionalResourceGroup = operation.Value;
         ArmDeploymentCollection = regionalResourceGroup.GetArmDeployments();
 
-        var regionalServiceNames = new ServiceNames(infraPrefix, env, uniqueString, AzureLocation.CentralUS);
+        var regionalServiceNames = new AzureServiceNames(infraPrefix, env, uniqueString, AzureLocation.CentralUS);
         await Provision(ArmDeploymentCollection, regionalServiceNames, configs, services, env, "Regional");
 
         //Link resources. Regional cuz KV is regional
@@ -236,7 +235,7 @@ public class Parser
         return 0;
     }
 
-    private static async Task Provision(ArmDeploymentCollection ArmDeploymentCollection, ServiceNames servceNames, Dictionary<string, string> configs, HashSet<string> services, string env, string templateName)
+    private static async Task Provision(ArmDeploymentCollection ArmDeploymentCollection, AzureServiceNames servceNames, Dictionary<string, string> configs, HashSet<string> services, string env, string templateName)
     {
         var templateFile = $"{AppDomain.CurrentDomain.BaseDirectory}Data/{env}/{templateName}.json";
         var parameterFile = $"{AppDomain.CurrentDomain.BaseDirectory}Data/{env}/{templateName}.Parameters.json";
