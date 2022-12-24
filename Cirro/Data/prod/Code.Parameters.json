@@ -1,0 +1,20 @@
+{
+  "primaryRegionResourceGroupName": {
+    "value": "__PRIMARYRGNAME__"
+  },
+  "webPlanName": {
+    "value": "__WEBPLANNAME__"
+  },
+  "webAppName": {
+    "value": "__WEBAPPNAME__"
+  },
+  "linuxFxVersion": {
+    "value": "__LINUXVERSION__"
+  },
+  "packageLink": {
+    "value": "__PACKAGELINK__"
+  },
+  "services": {
+    "value": "__SERVICES__"
+  }
+}

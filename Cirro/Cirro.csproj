@@ -23,7 +23,7 @@
     <PackageReference Include="Microsoft.Graph" Version="4.48.0" />
   </ItemGroup>
   <ItemGroup>
-    <None Update="Data\**">
+    <None Update="Data\**\**">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

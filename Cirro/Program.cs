@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.IO;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using Azure;
@@ -22,12 +23,12 @@ public class Parser
             return 1;
         }
 
-        if (args.Length < 2 || args[1].Length > 9)
+        if (args.Length < 2 || args[1].Length > 9 || args[1].Length < 5)
         {
-            Console.WriteLine("The Infra Prefix is missing or longer than 10 character. Please see doc {insert doc link}");
+            Console.WriteLine("The Infra Prefix is missing or isn't between 5-10 character. Please see doc {insert doc link}");
             return 1;
         }
-        var infraPrefix = args[0];
+        var infraPrefix = args[1];
 
         var env = args.Length > 2 ? args[2] : "";
         if (Enviornments.SupportedEnviornments.Contains(env) == false)
@@ -119,12 +120,15 @@ public class Parser
                 configs.Add("__USERPRINCIPALID__", principalId);
                 services.Add(Services.DevUser);
             }
+
+            services.Remove(Services.WebApp);
+            services.Remove(Services.FunctionApp);
         }
 
         configs.Add("\"__SERVICES__\"", "[\"" + string.Join("\",\"", services) + "\"]");
 
         var client = new ArmClient(credential);
-        SubscriptionResource subscription;
+        SubscriptionResource? subscription;
 
         if (subId == null)
         {
@@ -133,11 +137,23 @@ public class Parser
         else
         {
             var subs = client.GetSubscriptions();
-            subscription = subs.FirstOrDefault(x => x.Data.SubscriptionId == subId) ?? await client.GetDefaultSubscriptionAsync();    //shouldn't default, should throw error instead
+            subscription = subs.FirstOrDefault(x => x.Data.SubscriptionId == subId);    //shouldn't default, should throw error instead
+
+            if (subscription == null)
+            {
+                subscription = await client.GetDefaultSubscriptionAsync();
+                Console.WriteLine($"{subId} can't be found under your user account. Would you like to use your default subscription of {subscription.Data.Id}? (Y/n)");
+                string? input = Console.ReadLine();
+
+                if (input?.Trim().ToLower() != "y" && input?.Trim().ToLower() != "yes")
+                {
+                    Console.WriteLine("Exiting. Nothing has been provisioned.");
+                    return 0;
+                }
+            }
         }
 
         Console.WriteLine($"Using subscription: {subscription.Data.SubscriptionId}");
-        //Console.WriteLine($"Configs: {string.Join(" ",configs)}");
         List<string> ignoreServices = new() { Services.DevUser, Services.ManagedIdentity, Services.KeyVault };
         Console.WriteLine($"Services to be provisioned: Managed Identity (required), Keyvault (required), {string.Join(", ", services.Where(x => ignoreServices.Contains(x) == false))}");
 
@@ -169,35 +185,37 @@ public class Parser
         configs.Add("__PRIMARYRGNAME__", primaryRegionResourceGroupName);
 
         //Primary Deploy
-        Console.WriteLine($"Creating the Primary Region Resource Group");
+        Console.WriteLine($"Deploying the Global Resources. This may take a while.");
         var operation = await resourceGroups.CreateOrUpdateAsync(WaitUntil.Completed, primaryRegionResourceGroupName, new ResourceGroupData(AzureLocation.CentralUS));
         var primaryResourceGroup = operation.Value;
         var ArmDeploymentCollection = primaryResourceGroup.GetArmDeployments();
 
         var primaryServiceNames = new ServiceNames(infraPrefix, env, uniqueString, AzureLocation.CentralUS);
-        await Provision(ArmDeploymentCollection, primaryServiceNames, configs, services, "Primary");
+        await Provision(ArmDeploymentCollection, primaryServiceNames, configs, services, env, "Primary");
 
         //Regional Deploys
-        Console.WriteLine($"Creating the {AzureLocation.CentralUS} Resource Group");
+        Console.WriteLine($"Deploying the Regional Resources. This may take a while.");
         operation = await resourceGroups.CreateOrUpdateAsync(WaitUntil.Completed, $"{rgPrefix}-{AzureLocation.CentralUS}", new ResourceGroupData(AzureLocation.CentralUS));
         var regionalResourceGroup = operation.Value;
         ArmDeploymentCollection = regionalResourceGroup.GetArmDeployments();
 
         var regionalServiceNames = new ServiceNames(infraPrefix, env, uniqueString, AzureLocation.CentralUS);
-        await Provision(ArmDeploymentCollection, regionalServiceNames, configs, services, "Regional");
+        await Provision(ArmDeploymentCollection, regionalServiceNames, configs, services, env, "Regional");
 
-        //System.IO.File.Exists to see if Failover json exists
+        //Link resources. Regional cuz KV is regional
+        //SSL Cert creation https://github.com/Azure/azure-quickstart-templates/tree/master/application-workloads/umbraco/umbraco-webapp-simple
+        Console.WriteLine($"Linking the Resources");
+        await Provision(ArmDeploymentCollection, regionalServiceNames, configs, services, env, "Link");
 
-        //Link resources
-        ArmDeploymentCollection = regionalResourceGroup.GetArmDeployments();
-
-        var linkServiceNames = new ServiceNames(infraPrefix, env, uniqueString, AzureLocation.CentralUS);
-        await Provision(ArmDeploymentCollection, linkServiceNames, configs, services, "Link");
-
+        if (env == "dev")
+        {
+            var kvEndpoint = "\"KV_ENDPOINT\": \"https://aperitest-dev-cus-kv0f0f.vault.azure.net/\"";
+            System.IO.File.WriteAllText($"{Environment.CurrentDirectory}/Dev.Keyvault.json", kvEndpoint);
+        }
 
         /*
         //If Dev, add kv endpoint to appsettings.local/appsettings.dev. STAGE 2 issue
-
+        //builder.Configuration.AddJsonFile("appsettings.local.json", optional: true, reloadOnChange: true);
         //Console.WriteLine(AppContext.BaseDirectory);
         var initialJson = System.IO.File.ReadAllText("appsettings.Developer.json");
         var array = JArray.Parse(initialJson);
@@ -212,29 +230,24 @@ public class Parser
 
         Console.WriteLine($"Completed Provisioning");
 
-        //Split out primary region and primary region
-
-
-        //Could Have a deploy failover region section
-
-
         //SQL server creation looks at a server login. Considering quering that via questions to terminal
         //https://learn.microsoft.com/en-us/azure/azure-sql/database/single-database-create-arm-template-quickstart?view=azuresql
-
-        //Consider adding 00 to end of service names to iterate, but since template for everyone would it help?
-
-        //dev then give access to resource groups? instead of role assignment to managed identity
-        //https://learn.microsoft.com/en-us/azure/role-based-access-control/role-assignments-template
 
         return 0;
     }
 
-    private static async Task Provision(ArmDeploymentCollection ArmDeploymentCollection, ServiceNames servceNames, Dictionary<string, string> configs, HashSet<string> services, string templateName)
+    private static async Task Provision(ArmDeploymentCollection ArmDeploymentCollection, ServiceNames servceNames, Dictionary<string, string> configs, HashSet<string> services, string env, string templateName)
     {
-        Console.WriteLine($"Deploying the {templateName} Resources. This may take a while.");
+        var templateFile = $"{AppDomain.CurrentDomain.BaseDirectory}Data/{env}/{templateName}.json";
+        var parameterFile = $"{AppDomain.CurrentDomain.BaseDirectory}Data/{env}/{templateName}.Parameters.json";
 
-        var template = System.IO.File.ReadAllText($"{AppDomain.CurrentDomain.BaseDirectory}Data/{templateName}.json");
-        var parameters = System.IO.File.ReadAllText($"{AppDomain.CurrentDomain.BaseDirectory}Data/{templateName}.Parameters.json");
+        if (System.IO.File.Exists(templateFile))
+        {
+            return;
+        }
+
+        var template = System.IO.File.ReadAllText(templateFile);
+        var parameters = System.IO.File.ReadAllText(parameterFile);
 
         foreach (var config in configs)
         {
