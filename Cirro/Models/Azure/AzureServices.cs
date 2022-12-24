@@ -38,22 +38,22 @@ public static class AzureServices
 
 public class AzureServiceNames
 {
-    public AzureServiceNames(string infraPrefix, string env, string uniqueString, AzureLocation loc)
+    public AzureServiceNames(string projectName, string env, string uniqueString, AzureLocation loc)
     {
-        InfraPrefix = infraPrefix;
+        ProjectName = projectName;
         Enviornment = env;
         Location = loc;
         UniqueString = uniqueString;
     }
 
-    public string InfraPrefix { get; set; }
+    public string ProjectName { get; set; }
     public string Enviornment { get; set; }
     public AzureLocation Location { get; set; }
     public string UniqueString { get; set; }
 
-    public string ResourcePrefix => $"{InfraPrefix}-{Enviornment}-{AzureLocations.ShortName[Location]}"; //takes up 20 chars
-    public string ResourcePrefixNoHyphen => $"{InfraPrefix}{Enviornment}{AzureLocations.ShortName[Location]}".ToLower();
-    public string ResourcePrefixLower => $"{InfraPrefix.Substring(0,7)}-{Enviornment}-{AzureLocations.ShortName[Location]}".ToLower();
+    public string ResourcePrefix => $"{ProjectName}-{Enviornment}-{AzureLocations.ShortName[Location]}"; //takes up 20 chars
+    public string ResourcePrefixNoHyphen => $"{ProjectName}{Enviornment}{AzureLocations.ShortName[Location]}".ToLower();
+    public string ResourcePrefixLower => $"{ProjectName.Substring(0,7)}-{Enviornment}-{AzureLocations.ShortName[Location]}".ToLower();
 
     public KeyValuePair<string, string> WebApp => new("__WEBAPPNAME__", $"{ResourcePrefix}-WebApp{UniqueString}".Substring(0, 32));
     public KeyValuePair<string, string> FunctionApp => new("__FUNCTIONAPPNAME__", $"{ResourcePrefix}-FunctionApp{UniqueString}".Substring(0, 32));
