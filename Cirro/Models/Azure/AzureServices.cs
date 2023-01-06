@@ -96,6 +96,16 @@ public static class AzureProgramConnections //this is dotnet specific
     public static Dictionary<string, string[]> ServiceToConnectionCode => new()
     {
         {
+            AzureServices.DevUser, new string[]
+            {
+                "if (builder.Environment.IsDevelopment())",
+                "{",
+                "\tbuilder.Configuration.AddJsonFile(\"appsettings.cirro.json\");",
+                "}",
+                "\n"
+            }
+        },
+        {
             AzureServices.KeyVault, new string[]
             {
                 "var options = new SecretClientOptions()\n",
@@ -108,7 +118,8 @@ public static class AzureProgramConnections //this is dotnet specific
                 "\t\tMode = RetryMode.Exponential",
                 "\t}",
                 "};",
-                "var secretClient = new SecretClient(new Uri(configuration[\"KV_ENDPOINT\"]), new DefaultAzureCredential(), options);"
+                "var secretClient = new SecretClient(new Uri(builder.Configuration[\"KV_ENDPOINT\"]), new DefaultAzureCredential(), options);",
+                "\n"
             }
         },
         {
@@ -123,7 +134,8 @@ public static class AzureProgramConnections //this is dotnet specific
                 "\t\tMaxRetryWaitTimeOnRateLimitedRequests = TimeSpan.FromSeconds(60)",
                 "\t};",
                 "\treturn new CosmosClient(cosmosConnection);",
-                "});"
+                "});",
+                "\n"
             }
         }
     };

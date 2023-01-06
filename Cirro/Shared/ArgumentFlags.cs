@@ -7,13 +7,13 @@ namespace Cirro.Shared;
 
 public class ArgumentFlags
 {
-    [Option('c', "cloud", Required = true, HelpText = "Please specify the cloud with -c. See docs on getting started here: {doc-link}")]
+    [Option('c', "cloud", Required = true, HelpText = "Please specify the cloud with -c. See docs on getting started here: {doc-link}", Default = "azure")]
     public string Cloud { get; set; }
 
     [Option('n', "name", Required = true, HelpText = "Please specify the name to prefix the infrastructure with -n. See docs on getting started here: {doc-link}")]
     public string ProjectName { get; set; }
 
-    [Option('e', "enviornment", Required = true, HelpText = "Please specify the name to prefix the infrastructure with -e. Please see doc {insert doc link}")]
+    [Option('e', "enviornment", Required = true, HelpText = "Please specify the name to prefix the infrastructure with -e. Please see doc {insert doc link}", Default = "dev")]
     public string Enviornment { get; set; }
 
     [Option('f', "framework", HelpText = "The language or framework the project is written in, i.e. dotnet, python etc. See doc here {link}")]

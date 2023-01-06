@@ -20,7 +20,7 @@ public static class AzureDotNet
 
         await Interpret(env, credential, configs, services);
         await AzureProvisioner.Provision(projectName, env, subId, credential, configs, services);
-        await Connect(env, configs, services);
+        //await Connect(env, configs, services);
 
         return 0;
     }
@@ -134,6 +134,26 @@ public static class AzureDotNet
 
         using var gitIgnoreWriter = new StreamWriter(gitIgnoreFile);
         await gitIgnoreWriter.WriteLineAsync("appsettings.cirro.json");
+
+        var currentProgram = System.IO.File.ReadAllLines(programFile);
+        var usings = AzureServices.SdkToServices.Where(x => services.Contains(x.Value)).Select(x => $"using {x.Key};");
+        var connections = AzureProgramConnections.ServiceToConnectionCode.Where(x => services.Contains(x.Key)).SelectMany(x => x.Value);
+
+        var counter = 0;
+        string? line;
+
+        using var programFileReader = new StreamReader(programFile);
+        while ((line = await programFileReader.ReadLineAsync()) != null)
+        {
+            counter++;
+            if (line.Contains("var builder"))
+            {
+                break;
+            }
+        }
+
+        var finalProgram = usings.Union(currentProgram.Take(counter)).Union(connections).Union(currentProgram.Skip(counter));
+        System.IO.File.WriteAllLines(programFile, finalProgram);
 
 
         //Connet step
