@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using System.Text.RegularExpressions;
 using Azure.Identity;
 using Azure.ResourceManager;
@@ -13,6 +14,20 @@ public static class AzureDotNet
     {
         var services = new HashSet<string>() { AzureServices.ManagedIdentity, AzureServices.KeyVault };
         var configs = new Dictionary<string, string>();
+        var credential = new AzureCliCredential();
+
+        Console.WriteLine($"projectName: {projectName}");
+
+        await Interpret(env, credential, configs, services);
+        await AzureProvisioner.Provision(projectName, env, subId, credential, configs, services);
+        await Connect(env, configs, services);
+
+        return 0;
+    }
+
+    public static async Task<int> Interpret(string env, AzureCliCredential credential, Dictionary<string, string> configs, HashSet<string> services)
+    {
+
         var csprojData = "";
 
         var csprojFiles = System.IO.Directory.GetFiles(Environment.CurrentDirectory, "*.csproj", SearchOption.AllDirectories);
@@ -37,10 +52,8 @@ public static class AzureDotNet
         {
             TextWriter errorWriter = Console.Error;
             errorWriter.WriteLine(e.Message);
-            return 1;
         }
 
-        Console.WriteLine($"projectName: {projectName}");
 
         foreach (var sdkToService in AzureServices.SdkToServices)
         {
@@ -49,8 +62,6 @@ public static class AzureDotNet
                 services.Add(sdkToService.Value);
             }
         }
-
-        var credential = new AzureCliCredential();
 
         if (env.Equals("dev"))
         {
@@ -70,47 +81,6 @@ public static class AzureDotNet
             services.Remove(AzureServices.FunctionApp);
         }
 
-        configs.Add("\"__SERVICES__\"", "[\"" + string.Join("\",\"", services) + "\"]");
-
-        var client = new ArmClient(credential);
-        SubscriptionResource? subscription;
-
-        if (subId == null)
-        {
-            subscription = await client.GetDefaultSubscriptionAsync();
-        }
-        else
-        {
-            var subs = client.GetSubscriptions();
-            subscription = subs.FirstOrDefault(x => x.Data.SubscriptionId == subId);    //shouldn't default, should throw error instead
-
-            if (subscription == null)
-            {
-                subscription = await client.GetDefaultSubscriptionAsync();
-                Console.WriteLine($"{subId} can't be found under your user account. Would you like to use your default subscription of {subscription.Data.Id}? (Y/n)");
-                string? input = Console.ReadLine();
-
-                if (input?.Trim().ToLower() != "y" && input?.Trim().ToLower() != "yes")
-                {
-                    Console.WriteLine("Exiting. Nothing has been provisioned.");
-                    return 0;
-                }
-            }
-        }
-
-        Console.WriteLine($"Using subscription: {subscription.Data.SubscriptionId}");
-        List<string> ignoreServices = new() { AzureServices.DevUser, AzureServices.ManagedIdentity, AzureServices.KeyVault };
-        Console.WriteLine($"Services to be provisioned: Managed Identity (required), Keyvault (required), {string.Join(", ", services.Where(x => ignoreServices.Contains(x) == false))}");
-
-        Console.WriteLine("Is this correct? (Y/n)");
-        string? userinput = Console.ReadLine();
-
-        if (userinput?.Trim().ToLower() != "y" && userinput?.Trim().ToLower() != "yes")
-        {
-            Console.WriteLine("Exiting. Nothing has been provisioned.");
-            return 0;
-        }
-
         if (services.Contains(AzureServices.WebApp) || services.Contains(AzureServices.FunctionApp))
         {
             var regex = new Regex("<TargetFramework>(.*)</TargetFramework>");   //since combining csproj, could have multiple target frameworks here
@@ -120,12 +90,55 @@ public static class AzureDotNet
             configs.Add("__LINUXVERSION__", "DOTNETCORE|" + s.Replace("net", ""));
         }
 
-        Console.WriteLine("Completed Interpretting");
+        configs.Add("\"__SERVICES__\"", "[\"" + string.Join("\",\"", services) + "\"]");
 
-        await AzureProvisioner.Provision(projectName, env, subscription, configs, services);
+        Console.WriteLine("Completed Interpretting");
+        return 0;
+    }
+
+    public static async Task<int> Connect(string env, Dictionary<string, string> configs, HashSet<string> services)
+    {
+
+        var appsettingFile = System.IO.Directory.GetFiles(Environment.CurrentDirectory, "appsettings.json", SearchOption.AllDirectories).FirstOrDefault();
+        var programFile = System.IO.Directory.GetFiles(Environment.CurrentDirectory, "Program.cs", SearchOption.AllDirectories).FirstOrDefault();
+
+        if (string.IsNullOrEmpty(appsettingFile) || string.IsNullOrEmpty(programFile))
+        {
+            Console.WriteLine($"No appsettings.json and/or Program.cs file is found within this project. Cannot automatically connect resources.");
+            return 1;
+        }
+
+        var cirroAppsettingsFile = appsettingFile.Replace("appsettings", "appsettings.cirro");
+        var gitIgnoreFile = appsettingFile.Replace("appsettings.json", ".gitignore");
+        var programFileOld = appsettingFile.Replace("Program.cs", "Program.old.cs");
+
+
+        if (System.IO.File.Exists(cirroAppsettingsFile) == false)
+        {
+            System.IO.File.Create(cirroAppsettingsFile);
+        }
+        if (System.IO.File.Exists(gitIgnoreFile) == false)
+        {
+            System.IO.File.Create(gitIgnoreFile);
+        }
+
+        if (System.IO.File.Exists(programFileOld) == false)
+        {
+            System.IO.File.Copy(programFile, programFileOld);
+        }
+
+        using var appsettingsWriter = new StreamWriter(cirroAppsettingsFile);
+        await appsettingsWriter.WriteLineAsync("{");
+        await appsettingsWriter.WriteLineAsync($"\"KV_Endpoint\": \"{configs["__KEYVAULTNAME__"]}\"");
+        await appsettingsWriter.WriteLineAsync("}");
+
+        using var gitIgnoreWriter = new StreamWriter(gitIgnoreFile);
+        await gitIgnoreWriter.WriteLineAsync("appsettings.cirro.json");
+
 
         //Connet step
         /*
+         * Shouldn't use any specific resource names, should use config and services only to connect using configuration builder
         //If Dev, add kv endpoint to appsettings.local/appsettings.dev. STAGE 2 issue
         //builder.Configuration.AddJsonFile("appsettings.local.json", optional: true, reloadOnChange: true);
         //Console.WriteLine(AppContext.BaseDirectory);

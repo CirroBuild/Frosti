@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "PiFmYKk1csaOml/Fw4jYqlZM99qTFsK4XWudXW34Lb8Ww3JI6GJZf1ez90XH237WX+Wj/tidDRmiZuM2+gXP1g==",
+  "dgSpecHash": "qC7HBUTyfCQDqKqtS2w/Y1ZB/O/TdvyQKB3M3i6kjjyxr7DW0Cmj2BX30m5qk7lSJouSP43QxDfwaC8wRlrmQQ==",
   "success": true,
   "projectFilePath": "/Users/philipedat/Projects/Cirro/Cirro/Cirro.csproj",
   "expectedPackageFiles": [
@@ -8,6 +8,7 @@
     "/Users/philipedat/.nuget/packages/azure.identity/1.8.0/azure.identity.1.8.0.nupkg.sha512",
     "/Users/philipedat/.nuget/packages/azure.resourcemanager/1.3.2/azure.resourcemanager.1.3.2.nupkg.sha512",
     "/Users/philipedat/.nuget/packages/azure.resourcemanager.resources/1.3.1/azure.resourcemanager.resources.1.3.1.nupkg.sha512",
+    "/Users/philipedat/.nuget/packages/commandlineparser/2.9.1/commandlineparser.2.9.1.nupkg.sha512",
     "/Users/philipedat/.nuget/packages/microsoft.bcl.asyncinterfaces/1.1.1/microsoft.bcl.asyncinterfaces.1.1.1.nupkg.sha512",
     "/Users/philipedat/.nuget/packages/microsoft.csharp/4.5.0/microsoft.csharp.4.5.0.nupkg.sha512",
     "/Users/philipedat/.nuget/packages/microsoft.graph/4.48.0/microsoft.graph.4.48.0.nupkg.sha512",

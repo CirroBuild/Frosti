@@ -1,17 +1,30 @@
 ﻿<Properties StartupConfiguration="{55BE7C36-DD3F-43B8-8248-F3EF8164ED70}|Default">
-  <MonoDevelop.Ide.Workbench ActiveDocument="Cirro/Program.cs">
+  <MonoDevelop.Ide.ItemProperties.Cirro PreferredExecutionTarget="MonoDevelop.Default" />
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Cirro/Synthesizers/AzureDotNet.cs">
     <Files>
       <File FileName="Cirro/Program.cs" Line="37" Column="22" />
-      <File FileName="Cirro/Synthesizers/AzureDotNet.cs" />
-      <File FileName="Cirro/Constants/Constants.cs" />
+      <File FileName="Cirro/Synthesizers/AzureDotNet.cs" Line="18" Column="41" />
+      <File FileName="Cirro/Constants/Constants.cs" Line="1" Column="1" />
       <File FileName="Cirro/Models/Azure/AzureServices.cs" />
+      <File FileName="Cirro/Provisioners/AzureProvisioner.cs" Line="28" Column="68" />
     </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State name="__root__">
+          <Node name="Cirro" expanded="True">
+            <Node name="Cirro" expanded="True">
+              <Node name="Data" expanded="True" />
+              <Node name="Synthesizers" expanded="True" />
+            </Node>
+          </Node>
+        </State>
+      </Pad>
+    </Pads>
   </MonoDevelop.Ide.Workbench>
-  <MultiItemStartupConfigurations />
-  <MonoDevelop.Ide.ItemProperties.Cirro PreferredExecutionTarget="MonoDevelop.Default" />
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore />
   </MonoDevelop.Ide.DebuggingService.Breakpoints>
-  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MultiItemStartupConfigurations />
 </Properties>

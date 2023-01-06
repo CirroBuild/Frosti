@@ -1,7 +1,11 @@
 ﻿using Azure.Core;
+using Microsoft.Graph;
+using Microsoft.Graph.CallRecords;
+using Microsoft.Identity.Client.Extensions.Msal;
+using static Azure.Core.HttpHeader;
 
 namespace Cirro;
-public static class AzureServices
+public static class AzureServices   //dotnet specific the sdks to service
 {
     public static readonly string WebApp = "WebApp";
     public static readonly string FunctionApp = "FunctionApp";
@@ -23,7 +27,7 @@ public static class AzureServices
         {"<Project Sdk=\"Microsoft.NET.Sdk.Web\">", WebApp},
         {"Microsoft.NET.Sdk.Functions", FunctionApp},
         {"Azure.Storage", Storage},                               //Blobs, Queues, Files, DataLake (seperate sdks exist. Needed?)
-        {"Azure.Security.KeyVault", KeyVault},
+        {"Azure.Security.KeyVault.Secrets", KeyVault},
         {"Azure.Messaging.ServiceBus", ServiceBus},
         {"Azure.Messaging.EventHubs", EventHubs},
         {"Microsoft.ApplicationInsights", ApplicationInsights},
@@ -84,5 +88,43 @@ public class AzureServiceNames
         {AzureServices.PostgreSQL, PostgreSQL},
         {AzureServices.KeyVault, KeyVault},
         {AzureServices.ManagedIdentity, ManagedIdentity}
+    };
+};
+
+public static class AzureProgramConnections //this is dotnet specific
+{
+    public static Dictionary<string, string[]> ServiceToConnectionCode => new()
+    {
+        {
+            AzureServices.KeyVault, new string[]
+            {
+                "var options = new SecretClientOptions()\n",
+                "{",
+                "\tRetry =",
+                "\t{",
+                "\t\tDelay= TimeSpan.FromSeconds(2),",
+                "\t\tMaxDelay = TimeSpan.FromSeconds(16),",
+                "\t\tMaxRetries = 5,",
+                "\t\tMode = RetryMode.Exponential",
+                "\t}",
+                "};",
+                "var secretClient = new SecretClient(new Uri(configuration[\"KV_ENDPOINT\"]), new DefaultAzureCredential(), options);"
+            }
+        },
+        {
+            AzureServices.Cosmos, new string[]
+            {
+                "var cosmosConnection = secretClient.GetSecret(\"CosmosConnection\").Value.Value;",
+                "builder.Services.AddSingleton(s =>",
+                "{",
+                "\tCosmosClientOptions cosmosClientOptions = new CosmosClientOptions",
+                "\t{",
+                "\t\tMaxRetryAttemptsOnRateLimitedRequests = 3,",
+                "\t\tMaxRetryWaitTimeOnRateLimitedRequests = TimeSpan.FromSeconds(60)",
+                "\t};",
+                "\treturn new CosmosClient(cosmosConnection);",
+                "});"
+            }
+        }
     };
 };

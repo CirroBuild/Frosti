@@ -54,3 +54,4 @@
 /Users/philipedat/Projects/Cirro/Cirro/obj/Debug/net7.0/Cirro.pdb
 /Users/philipedat/Projects/Cirro/Cirro/obj/Debug/net7.0/Cirro.genruntimeconfig.cache
 /Users/philipedat/Projects/Cirro/Cirro/obj/Debug/net7.0/ref/Cirro.dll
+/Users/philipedat/Projects/Cirro/Cirro/bin/Debug/net7.0/CommandLine.dll

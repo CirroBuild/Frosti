@@ -8,6 +8,7 @@ using Azure.Identity;
 using Azure.ResourceManager;
 using Azure.ResourceManager.Resources;
 using Azure.ResourceManager.Resources.Models;
+using Cirro.Shared;
 using Cirro.Synthesizers;
 using Microsoft.Graph;
 
@@ -16,51 +17,64 @@ public class Parser
 {
     public static async Task<int> Main(string[] args)
     {
-        var cloud = args.Length > 0 ? args[0] : "";
-        if (Supported.Clouds.Contains(cloud) == false)
+        var flags = CommandLine.Parser.Default.ParseArguments<ArgumentFlags>(args);
+
+        var cloud = flags.Value.Cloud.ToLower();
+        var projectName = flags.Value.ProjectName;
+        var env = flags.Value.Enviornment.ToLower();
+        var framework = flags.Value.Framework?.ToLower();
+        var subId = flags.Value.SubscriptionId;
+
+        if (projectName.Length > 9 || projectName.Length < 5)
         {
-            Console.WriteLine($"Please specify the cloud to create the infrastructure. Select from: {string.Join(", ", Supported.Clouds)}");
+            Console.WriteLine("The name to prefix the infrastrucutre needs to be between 5-10 character. Please see doc {insert doc link}");
             return 1;
         }
 
-        if (args.Length < 2 || args[1].Length > 9 || args[1].Length < 5)
+        if (string.IsNullOrEmpty(framework))
         {
-            Console.WriteLine("The Infra Prefix is missing or isn't between 5-10 character. Please see doc {insert doc link}");
-            return 1;
-        }
-        var projectName = args[1];
+            framework = cloud == Constants.Azure ? Constants.DotNet : string.Empty;
+            framework = cloud == Constants.AWS ? Constants.Java : string.Empty;
+            framework = cloud == Constants.GCP ? Constants.Go : string.Empty;
 
-        var env = args.Length > 2 ? args[2] : "";
-        if (Supported.Enviornments.Contains(env) == false)
-        {
-            Console.WriteLine($"Enviornment is missing or {env} is not a supported enviornment. Please select from: {string.Join(", ", Supported.Enviornments)}");
-            return 1;
+            Console.WriteLine($"Setting default framework to use {framework}. To use a different framework, provide it with -f. See doc link");
         }
-
-        var subId = args.Length > 3 ? args[3] : null;
 
         switch (cloud)
         {
-            case "azure":
-                return await AzureDotNet.Synthesize(projectName, env, subId);
-            case "aws":
-                return ProvisionAWS(projectName, env);
-            case "gcp":
-                return ProvisionGCP(projectName, env);
+            case Constants.Azure:
+                switch (framework)
+                {
+                    case Constants.DotNet:
+                        return await AzureDotNet.Synthesize(projectName, env, subId);
+                    default:
+                        Console.WriteLine($"{framework} is not yet supported for {Constants.Azure}. Supported frameworks are: {string.Join(", ", Supported.Azure.Frameworks)}. See doc for more details: link");
+                        return 1;
+                }
+
+            case Constants.AWS:
+                switch (framework)
+                {
+                    case Constants.Java:
+                        return await AWSJava.Synthesize(projectName, env, subId);
+                    default:
+                        Console.WriteLine($"{framework} is not yet supported for {Constants.AWS}. Supported frameworks are: {string.Join(", ", Supported.AWS.Frameworks)}. See doc for more details: link");
+                        return 1;
+                }
+
+            case Constants.GCP:
+                switch (framework)
+                {
+                    case Constants.Go:
+                        return await GCPGo.Synthesize(projectName, env, subId);
+                    default:
+                        Console.WriteLine($"{framework} is not yet supported for {Constants.GCP}. Supported frameworks are: {string.Join(", ", Supported.GCP.Frameworks)}. See doc for more details: link");
+                        return 1;
+                }
+
+            default:
+                Console.WriteLine($"{cloud} is not an acceptable value for cloud. Supported clouds are: {string.Join(", ", Supported.Clouds)}");
+                return 1;
         }
-
-        return 1;
-    }
-
-    private static int ProvisionAWS(string projectName, string env)
-    {
-        Console.WriteLine("Automatically provisioning AWS resources is not currently supported. It's coming soon! Please try provisioning via azure for now.");
-        return 0;
-    }
-
-    private static int ProvisionGCP(string projectName, string env)
-    {
-        Console.WriteLine("Automatically provisioning GCP resources is not currently supported. It's coming soon! Please try provisioning via azure for now.");
-        return 0;
     }
 }

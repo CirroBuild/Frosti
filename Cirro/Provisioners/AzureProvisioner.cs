@@ -12,12 +12,51 @@ using System.Diagnostics;
 namespace Cirro.Provisioners;
 public static class AzureProvisioner
 {
-    public static async Task Provision(string projectName, string env, SubscriptionResource subscription, Dictionary<string, string> configs, HashSet<string> services)
+    public static async Task<int> Provision(string projectName, string env, string? subId, AzureCliCredential credential, Dictionary<string, string> configs, HashSet<string> services)
     {
+
+        SubscriptionResource? subscription;
+        var client = new ArmClient(credential);
+
+        if (subId == null)
+        {
+            subscription = await client.GetDefaultSubscriptionAsync();
+        }
+        else
+        {
+            var subs = client.GetSubscriptions();
+            subscription = subs.FirstOrDefault(x => x.Data.SubscriptionId == subId);    //shouldn't default, should throw error instead
+
+            if (subscription == null)
+            {
+                subscription = await client.GetDefaultSubscriptionAsync();
+                Console.WriteLine($"{subId} can't be found under your user account. Would you like to use your default subscription of {subscription.Data.Id}? (Y/n)");
+                string? input = Console.ReadLine();
+
+                if (input?.Trim().ToLower() != "y" && input?.Trim().ToLower() != "yes")
+                {
+                    Console.WriteLine("Exiting. Nothing has been provisioned.");
+                }
+            }
+        }
+
+        Console.WriteLine($"Using subscription: {subscription.Data.SubscriptionId}");
+        List<string> ignoreServices = new() { AzureServices.DevUser, AzureServices.ManagedIdentity, AzureServices.KeyVault };
+        Console.WriteLine($"Services to be provisioned: Managed Identity (required), Keyvault (required), {string.Join(", ", services.Where(x => ignoreServices.Contains(x) == false))}");
+
+        Console.WriteLine("Is this correct? (Y/n)");
+        string? userinput = Console.ReadLine();
+
+        if (userinput?.Trim().ToLower() != "y" && userinput?.Trim().ToLower() != "yes")
+        {
+            Console.WriteLine("Exiting. Nothing has been provisioned.");
+            return 0;
+        }
+
         var resourceGroups = subscription.GetResourceGroups();
 
         var rgPrefix = $"{projectName}-{env}";
-        var uniqueString = Shared.GetUniqueString(subscription.Data.SubscriptionId, rgPrefix);
+        var uniqueString = Constants.GetUniqueString(subscription.Data.SubscriptionId, rgPrefix);
 
         if (services.Contains(AzureServices.WebApp) || services.Contains(AzureServices.FunctionApp))
         {
@@ -58,6 +97,8 @@ public static class AzureProvisioner
             var kvEndpoint = "\"KV_ENDPOINT\": \"https://aperitest-dev-cus-kv0f0f.vault.azure.net/\"";
             System.IO.File.WriteAllText($"{Environment.CurrentDirectory}/Dev.Keyvault.json", kvEndpoint);
         }
+
+        return 0;
     }
 
     private static async Task DeployARM(ArmDeploymentCollection ArmDeploymentCollection, AzureServiceNames servceNames, Dictionary<string, string> configs, HashSet<string> services, string env, string templateName)
