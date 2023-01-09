@@ -90,12 +90,9 @@ public static class AzureProvisioner
         Console.WriteLine($"Linking the Resources");
         await DeployARM(ArmDeploymentCollection, regionalServiceNames, configs, services, env, "Link");
 
-        Console.WriteLine($"Completed Provisioning");
-
-        if (env == "dev")
+        if (env == Constants.Dev)
         {
-            var kvEndpoint = "\"KV_ENDPOINT\": \"https://aperitest-dev-cus-kv0f0f.vault.azure.net/\"";
-            System.IO.File.WriteAllText($"{Environment.CurrentDirectory}/Dev.Keyvault.json", kvEndpoint);
+            configs.Add(regionalServiceNames.ServiceNameMap[AzureServices.KeyVault].Key, regionalServiceNames.ServiceNameMap[AzureServices.KeyVault].Value);
         }
 
         return 0;

@@ -33,9 +33,9 @@ public class Parser
 
         if (string.IsNullOrEmpty(framework))
         {
-            framework = cloud == Constants.Azure ? Constants.DotNet : string.Empty;
-            framework = cloud == Constants.AWS ? Constants.Java : string.Empty;
-            framework = cloud == Constants.GCP ? Constants.Go : string.Empty;
+            framework = cloud == Constants.Azure ? Constants.DotNet :
+            cloud == Constants.AWS ? Constants.Java :
+            cloud == Constants.GCP ? Constants.Go : string.Empty;
 
             Console.WriteLine($"Setting default framework to use {framework}. To use a different framework, provide it with -f. See doc link");
         }

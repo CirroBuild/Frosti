@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Azure.Identity;
@@ -19,8 +20,8 @@ public static class AzureDotNet
         Console.WriteLine($"projectName: {projectName}");
 
         await Interpret(env, credential, configs, services);
-        await AzureProvisioner.Provision(projectName, env, subId, credential, configs, services);
-        //await Connect(env, configs, services);
+        //await AzureProvisioner.Provision(projectName, env, subId, credential, configs, services);
+        await Connect(env, configs, services);
 
         return 0;
     }
@@ -108,75 +109,66 @@ public static class AzureDotNet
             return 1;
         }
 
-        var cirroAppsettingsFile = appsettingFile.Replace("appsettings", "appsettings.cirro");
         var gitIgnoreFile = appsettingFile.Replace("appsettings.json", ".gitignore");
-        var programFileOld = appsettingFile.Replace("Program.cs", "Program.old.cs");
-
-
-        if (System.IO.File.Exists(cirroAppsettingsFile) == false)
-        {
-            System.IO.File.Create(cirroAppsettingsFile);
-        }
-        if (System.IO.File.Exists(gitIgnoreFile) == false)
-        {
-            System.IO.File.Create(gitIgnoreFile);
-        }
+        var cirroServicesFile = appsettingFile.Replace("appsettings.json", ".cirroservices");
+        var localKvFile = appsettingFile.Replace("appsettings.json", ".cirrolocalkv");
+        var programFileOld = programFile.Replace("Program.cs", "Program.Save.cs");
 
         if (System.IO.File.Exists(programFileOld) == false)
         {
             System.IO.File.Copy(programFile, programFileOld);
         }
 
-        using var appsettingsWriter = new StreamWriter(cirroAppsettingsFile);
-        await appsettingsWriter.WriteLineAsync("{");
-        await appsettingsWriter.WriteLineAsync($"\"KV_Endpoint\": \"{configs["__KEYVAULTNAME__"]}\"");
-        await appsettingsWriter.WriteLineAsync("}");
+        //TEST ONLY. DELETE
+        configs.Add("__KEYVAULTNAME__", "https://aperitest-dev-cus-kv0f0f.vault.azure.net/");
 
-        using var gitIgnoreWriter = new StreamWriter(gitIgnoreFile);
-        await gitIgnoreWriter.WriteLineAsync("appsettings.cirro.json");
+        var cirroAppsettingsFile = appsettingFile.Replace("appsettings", "appsettings.cirro");
 
-        var currentProgram = System.IO.File.ReadAllLines(programFile);
-        var usings = AzureServices.SdkToServices.Where(x => services.Contains(x.Value)).Select(x => $"using {x.Key};");
-        var connections = AzureProgramConnections.ServiceToConnectionCode.Where(x => services.Contains(x.Key)).SelectMany(x => x.Value);
-
-        var counter = 0;
-        string? line;
-
-        using var programFileReader = new StreamReader(programFile);
-        while ((line = await programFileReader.ReadLineAsync()) != null)
+        if (System.IO.File.Exists(cirroAppsettingsFile) == false)
         {
-            counter++;
-            if (line.Contains("var builder"))
+            System.IO.File.AppendAllLines(gitIgnoreFile, new string[]
             {
-                break;
-            }
+                "appsettings.cirro.json",
+                ".cirroservices",
+                ".cirrolocalkv",
+                "Program.Save.cs"
+            });
         }
 
-        var finalProgram = usings.Union(currentProgram.Take(counter)).Union(connections).Union(currentProgram.Skip(counter));
-        System.IO.File.WriteAllLines(programFile, finalProgram);
+        if (System.IO.File.Exists(localKvFile) == false || System.IO.File.ReadAllText(localKvFile) != configs["__KEYVAULTNAME__"])
+        {
+            System.IO.File.WriteAllLines(cirroAppsettingsFile, new string[] { "{", $"\t\"KV_Endpoint\": \"{configs["__KEYVAULTNAME__"]}\"", "}" });
+        }
 
 
-        //Connet step
-        /*
-         * Shouldn't use any specific resource names, should use config and services only to connect using configuration builder
-        //If Dev, add kv endpoint to appsettings.local/appsettings.dev. STAGE 2 issue
-        //builder.Configuration.AddJsonFile("appsettings.local.json", optional: true, reloadOnChange: true);
-        //Console.WriteLine(AppContext.BaseDirectory);
-        var initialJson = System.IO.File.ReadAllText("appsettings.Developer.json");
-        var array = JArray.Parse(initialJson);
+        //still need to look into delete service connections if they got removed
+        var newServices = services.Where(x=> System.IO.File.ReadAllLines(cirroServicesFile).Contains(x) == false);
+        if (newServices.Count() != 0)
+        {
+            Console.WriteLine($"Connecting {string.Join(", ", newServices)}");
+            var currentProgram = System.IO.File.ReadAllLines(programFile);
+            var usings = AzureServices.SdkToServices.Where(x => newServices.Contains(x.Value)).Select(x => $"using {x.Key};");
+            var connections = AzureProgramConnections.ServiceToConnectionCode.Where(x => newServices.Contains(x.Key)).SelectMany(x => x.Value);
 
-        var itemToAdd = new JObject();
-        itemToAdd["id"] = 1234;
-        itemToAdd["name"] = "carl2";
-        array.Add(itemToAdd);
+            var counter = 0;
+            string? line;
 
-        var jsonToOutput = JsonConvert.SerializeObject(array, Formatting.Indented);
-        */
+            using var programFileReader = new StreamReader(programFile);
+            while ((line = await programFileReader.ReadLineAsync()) != null)
+            {
+                counter++;
+                if (line.Contains("var builder"))
+                {
+                    break;
+                }
+            }
 
+            var finalProgram = usings.Concat(currentProgram.Take(counter)).Concat(connections).Concat(currentProgram.Skip(counter)); //need to fix union
+            System.IO.File.WriteAllLines(programFile, finalProgram);
+            System.IO.File.AppendAllLines(cirroServicesFile, newServices);
+        }
 
-        //SQL server creation looks at a server login. Considering quering that via questions to terminal
-        //https://learn.microsoft.com/en-us/azure/azure-sql/database/single-database-create-arm-template-quickstart?view=azuresql
-
+        Console.WriteLine("Completed Connecting");
         return 0;
     }
 }

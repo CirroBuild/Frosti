@@ -101,14 +101,13 @@ public static class AzureProgramConnections //this is dotnet specific
                 "if (builder.Environment.IsDevelopment())",
                 "{",
                 "\tbuilder.Configuration.AddJsonFile(\"appsettings.cirro.json\");",
-                "}",
-                "\n"
+                "}"
             }
         },
         {
             AzureServices.KeyVault, new string[]
             {
-                "var options = new SecretClientOptions()\n",
+                "var options = new SecretClientOptions()",
                 "{",
                 "\tRetry =",
                 "\t{",
@@ -119,7 +118,6 @@ public static class AzureProgramConnections //this is dotnet specific
                 "\t}",
                 "};",
                 "var secretClient = new SecretClient(new Uri(builder.Configuration[\"KV_ENDPOINT\"]), new DefaultAzureCredential(), options);",
-                "\n"
             }
         },
         {
@@ -135,7 +133,6 @@ public static class AzureProgramConnections //this is dotnet specific
                 "\t};",
                 "\treturn new CosmosClient(cosmosConnection);",
                 "});",
-                "\n"
             }
         }
     };
