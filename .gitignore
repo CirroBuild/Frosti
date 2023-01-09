@@ -1,5 +1,5 @@
 .vs*
 .DS_Store
 Cirro/Properties/
-Cirro/bin/Release/
-Cirro/obj/Release/
+Cirro/bin/
+Cirro/obj/
