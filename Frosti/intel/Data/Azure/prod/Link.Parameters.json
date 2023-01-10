@@ -1,0 +1,17 @@
+{
+  "primaryRegionResourceGroupName": {
+    "value": "__PRIMARYRGNAME__"
+  },
+  "managedIdentityName": {
+    "value": "__MANAGEDIDENTITYNAME__"
+  },
+  "cosmosName": {
+    "value": "__COSMOSNAME__"
+  },
+  "keyVaultName": {
+    "value": "__KEYVAULTNAME__"
+  },
+  "services": {
+    "value": "__SERVICES__"
+  }
+}
