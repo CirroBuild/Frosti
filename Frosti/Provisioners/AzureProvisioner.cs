@@ -12,7 +12,7 @@ using System.Diagnostics;
 namespace Frosti.Provisioners;
 public static class AzureProvisioner
 {
-    public static async Task<int> Provision(string projectName, string env, string? subId, AzureCliCredential credential, Dictionary<string, string> configs, HashSet<string> services)
+    public static async Task<bool> Provision(string projectName, string env, string? subId, AzureCliCredential credential, Dictionary<string, string> configs, HashSet<string> services)
     {
 
         SubscriptionResource? subscription;
@@ -50,7 +50,7 @@ public static class AzureProvisioner
         if (userinput?.Trim().ToLower() != "y" && userinput?.Trim().ToLower() != "yes")
         {
             Console.WriteLine("Exiting. Nothing has been provisioned.");
-            return 0;
+            return false;
         }
 
         var resourceGroups = subscription.GetResourceGroups();
@@ -90,12 +90,12 @@ public static class AzureProvisioner
         Console.WriteLine($"Linking the Resources");
         await DeployARM(ArmDeploymentCollection, regionalServiceNames, configs, services, env, "Link");
 
-        if (env == Constants.Dev)
+        if (env == Environments.Dev)
         {
             configs.Add(regionalServiceNames.ServiceNameMap[AzureServices.KeyVault].Key, regionalServiceNames.ServiceNameMap[AzureServices.KeyVault].Value);
         }
 
-        return 0;
+        return true;
     }
 
     private static async Task DeployARM(ArmDeploymentCollection ArmDeploymentCollection, AzureServiceNames servceNames, Dictionary<string, string> configs, HashSet<string> services, string env, string templateName)

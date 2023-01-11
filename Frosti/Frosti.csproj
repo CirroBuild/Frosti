@@ -27,6 +27,8 @@
     <None Remove="brew.sh" />
     <None Remove="Frosti-v0.1preview-x64.tar.gz" />
     <None Remove="Frosti-v0.1.preview-arm64.tar.gz" />
+    <None Remove="Interpreters\Azure\" />
+    <None Remove="Linkers\Azure\" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Azure.ResourceManager" Version="1.3.2" />
@@ -49,5 +51,7 @@
     <Folder Include="Data\Azure\prod\" />
     <Folder Include="Interpreters\" />
     <Folder Include="Linkers\" />
+    <Folder Include="Interpreters\Azure\" />
+    <Folder Include="Linkers\Azure\" />
   </ItemGroup>
 </Project>

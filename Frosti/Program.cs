@@ -34,47 +34,47 @@ public class Parser
         if (string.IsNullOrEmpty(framework))
         {
             framework =
-                cloud == Constants.Azure ? Constants.DotNet :
-                cloud == Constants.AWS ? Constants.Java :
-                cloud == Constants.GCP ? Constants.Go : string.Empty;
+                cloud == Clouds.Azure ? Frameworks.DotNet :
+                cloud == Clouds.AWS ? Frameworks.Java :
+                cloud == Clouds.GCP ? Frameworks.Go : string.Empty;
 
             Console.WriteLine($"Setting default framework to use {framework}. To use a different framework, provide it with -f. See doc link");
         }
 
         switch (cloud)
         {
-            case Constants.Azure:
+            case Clouds.Azure:
                 switch (framework)
                 {
-                    case Constants.DotNet:
+                    case Frameworks.DotNet:
                         return await AzureDotNet.Synthesize(projectName, env, subId);
                     default:
-                        Console.WriteLine($"{framework} is not yet supported for {Constants.Azure}. Supported frameworks are: {string.Join(", ", Supported.Azure.Frameworks)}. See doc for more details: link");
+                        Console.WriteLine($"{framework} is not yet supported for {Frameworks.AzureSupported}. Supported frameworks are: {string.Join(", ", Frameworks.AzureSupported)}. See doc for more details: link");
                         return 1;
                 }
 
-            case Constants.AWS:
+            case Clouds.AWS:
                 switch (framework)
                 {
-                    case Constants.Java:
+                    case Frameworks.Java:
                         return await AWSJava.Synthesize(projectName, env, subId);
                     default:
-                        Console.WriteLine($"{framework} is not yet supported for {Constants.AWS}. Supported frameworks are: {string.Join(", ", Supported.AWS.Frameworks)}. See doc for more details: link");
+                        Console.WriteLine($"{framework} is not yet supported for {Frameworks.AWSSupported}. Supported frameworks are: {string.Join(", ", Frameworks.AWSSupported)}. See doc for more details: link");
                         return 1;
                 }
 
-            case Constants.GCP:
+            case Clouds.GCP:
                 switch (framework)
                 {
-                    case Constants.Go:
+                    case Frameworks.Go:
                         return await GCPGo.Synthesize(projectName, env, subId);
                     default:
-                        Console.WriteLine($"{framework} is not yet supported for {Constants.GCP}. Supported frameworks are: {string.Join(", ", Supported.GCP.Frameworks)}. See doc for more details: link");
+                        Console.WriteLine($"{framework} is not yet supported for {Frameworks.GCPSupported}. Supported frameworks are: {string.Join(", ", Frameworks.GCPSupported)}. See doc for more details: link");
                         return 1;
                 }
 
             default:
-                Console.WriteLine($"{cloud} is not an acceptable value for cloud. Supported clouds are: {string.Join(", ", Supported.Clouds)}");
+                Console.WriteLine($"{cloud} is not an acceptable value for cloud. Supported clouds are: {string.Join(", ", Clouds.Supported)}");
                 return 1;
         }
     }
