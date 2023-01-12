@@ -3,6 +3,6 @@ dotnet publish -c Release /p:PublishSingleFile=true -r osx-arm64 --self-containe
 lipo -create -output arm64/Frosti arm64/Frosti
 lipo -create -output intel/Frosti intel/Frosti
 
-tar -zvcf Frosti-v0.1.preview-arm64.tar.gz arm64/Frosti 
-tar -zvcf Frosti-v0.1preview-x64.tar.gz intel/Frosti 
+tar -zvcf Frosti-v0.3.preview-arm64.tar.gz arm64/Frosti 
+tar -zvcf Frosti-v0.3preview-x64.tar.gz intel/Frosti 
 

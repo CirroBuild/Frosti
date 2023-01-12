@@ -45,6 +45,9 @@
     "postgreSqlServerName": {
       "type": "string"
     },
+    "sqlPassword": {
+      "type": "string"
+    },
     "services": {
       "type": "array"
     }
@@ -258,7 +261,7 @@
       },
       "properties": {
         "administratorLogin": "FrostiAdmin",
-        "administratorLoginPassword": "!!FrostiBuild1010!!",
+        "administratorLoginPassword": "[parameters('sqlPassword')]",
         "primaryUserAssignedIdentityId": "[variables('managedIdentityResourceId')]",
         "minimalTlsVersion": "1.2"
       },
@@ -279,7 +282,7 @@
         "createMode": "Default",
         "version": "5.7",
         "administratorLogin": "FrostiAdmin",
-        "administratorLoginPassword": "!!FrostiBuild1010!!"
+        "administratorLoginPassword": "[parameters('sqlPassword')]"
       }
     },
     {
@@ -295,7 +298,7 @@
         "createMode": "Default",
         "version": "10",
         "administratorLogin": "FrostiAdmin",
-        "administratorLoginPassword": "!!FrostiBuild1010!!"
+        "administratorLoginPassword": "[parameters('sqlPassword')]"
       }
     }
   ]

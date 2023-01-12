@@ -19,13 +19,16 @@ public class Parser
     {
         var flags = CommandLine.Parser.Default.ParseArguments<ArgumentFlags>(args);
 
-        var cloud = flags.Value.Cloud.ToLower();
+        var cloud = Clouds.Azure; //flags.Value.Cloud.ToLower();
         var projectName = flags.Value.ProjectName;
-        var env = flags.Value.Enviornment.ToLower();
-        var framework = flags.Value.Framework?.ToLower();
+        var env = Environments.Dev; //flags.Value.Enviornment.ToLower();
+        var framework = Frameworks.DotNet; //flags.Value.Framework?.ToLower();
         var subId = flags.Value.SubscriptionId;
+        var autoConnect = flags.Value.AutoConnect;
+        var primaryLocation = Locations.NorthAmerica; //flags.Value.Location;
+        //for values above, check if they are one of expected values
 
-        if (projectName.Length > 9 || projectName.Length < 5)
+        if (projectName.Length > 10 || projectName.Length < 5)
         {
             Console.WriteLine("The name to prefix the infrastrucutre needs to be between 5-10 character. Please see doc {insert doc link}");
             return 1;
@@ -47,7 +50,7 @@ public class Parser
                 switch (framework)
                 {
                     case Frameworks.DotNet:
-                        return await AzureDotNet.Synthesize(projectName, env, subId);
+                        return await AzureDotNet.Synthesize(projectName, env, subId, autoConnect, primaryLocation);
                     default:
                         Console.WriteLine($"{framework} is not yet supported for {Frameworks.AzureSupported}. Supported frameworks are: {string.Join(", ", Frameworks.AzureSupported)}. See doc for more details: link");
                         return 1;

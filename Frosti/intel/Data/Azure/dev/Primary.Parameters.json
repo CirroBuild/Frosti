@@ -38,6 +38,9 @@
   "postgreSqlServerName": {
     "value": "__POSTGRESQLNAME__"
   },
+  "sqlPassword": {
+    "value": "__SQLPASSWORD__"
+  },
   "services": {
     "value": "__SERVICES__"
   }

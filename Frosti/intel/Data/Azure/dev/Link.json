@@ -15,7 +15,22 @@
     "cosmosName": {
       "type": "string"
     },
+    "storageName": {
+      "type": "string"
+    },
     "keyVaultName": {
+      "type": "string"
+    },
+    "sqlPassword": {
+      "type": "string"
+    },
+    "sqlServerName": {
+      "type": "string"
+    },
+    "mySqlServerName": {
+      "type": "string"
+    },
+    "postgreSqlServerName": {
       "type": "string"
     },
     "services": {
@@ -29,9 +44,25 @@
     {
       "type": "Microsoft.KeyVault/vaults/secrets",
       "apiVersion": "2021-11-01-preview",
-      "name": "[format('{0}/{1}', take(parameters('keyVaultName'),24), 'CosmosConnection')]",
+      "name": "[format('{0}/{1}', parameters('keyVaultName'), 'CosmosConnection')]",
       "properties": {
         "value": "[listConnectionStrings(resourceId(parameters('primaryRegionResourceGroupName'),'Microsoft.DocumentDB/databaseAccounts', parameters('cosmosName')), '2019-12-12').connectionStrings[0].connectionString]"
+      }
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2021-11-01-preview",
+      "name": "[format('{0}/{1}', parameters('keyVaultName'), 'SQLConnection')]",
+      "properties": {
+        "value": "[format('Data Source=tcp:{0},1433;Initial Catalog={1};User Id={2}@{3};Password={4};', reference(resourceId(parameters('primaryRegionResourceGroupName'),'Microsoft.Sql/servers', parameters('sqlserverName')), '2022-05-01-preview').fullyQualifiedDomainName, 'master', 'FrostiAdmin', reference(resourceId(parameters('primaryRegionResourceGroupName'),'Microsoft.Sql/servers', parameters('sqlserverName')),'2022-05-01-preview').fullyQualifiedDomainName, parameters('sqlPassword'))]"
+      }
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2021-11-01-preview",
+      "name": "[format('{0}/{1}', parameters('keyVaultName'), 'StorageConnection')]",
+      "properties": {
+        "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('storageName'), ';AccountKey=', listKeys(resourceId(parameters('primaryRegionResourceGroupName'),'Microsoft.Storage/storageAccounts', parameters('storageName')), '2019-04-01').keys[0].value,';EndpointSuffix=core.windows.net')]"
       }
     }
   ]

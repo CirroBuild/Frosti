@@ -8,8 +8,23 @@
   "cosmosName": {
     "value": "__COSMOSNAME__"
   },
+  "storageName": {
+    "value": "__STORAGENAME__"
+  },
   "keyVaultName": {
     "value": "__KEYVAULTNAME__"
+  },
+  "sqlPassword": {
+    "value": "__SQLPASSWORD__"
+  },
+  "sqlServerName": {
+    "value": "__SQLNAME__"
+  },
+  "mySqlServerName": {
+    "value": "__MYSQLNAME__"
+  },
+  "postgreSqlServerName": {
+    "value": "__POSTGRESQLNAME__"
   },
   "services": {
     "value": "__SERVICES__"

@@ -12,7 +12,7 @@ using System.Diagnostics;
 namespace Frosti.Provisioners;
 public static class AzureProvisioner
 {
-    public static async Task<bool> Provision(string projectName, string env, string? subId, AzureCliCredential credential, Dictionary<string, string> configs, HashSet<string> services)
+    public static async Task<bool> Provision(string projectName, string env, string? subId, AzureCliCredential credential, Dictionary<string, string> configs, HashSet<string> services, string primaryLocation)
     {
 
         SubscriptionResource? subscription;
@@ -64,36 +64,57 @@ public static class AzureProvisioner
             configs.Add("__FUNCTIONPLANNAME__", $"{projectName}-FunctionPlan-{uniqueString}".Substring(0, 40));
         }
 
+        if (services.Contains(AzureServices.SQL) || services.Contains(AzureServices.MySql) || services.Contains(AzureServices.MySql))
+        {
+            configs.Add("__SQLPASSWORD__", Guid.NewGuid().ToString());
+        }
+
         var primaryRegionResourceGroupName = $"{rgPrefix}-Primary";
         configs.Add("__PRIMARYRGNAME__", primaryRegionResourceGroupName);
 
+        //Define regions
+        var regions = AzureLocations.Transformer[primaryLocation].Take( Locations.EnvLocationCount[env]);
+        var primaryRegion = regions.First();
+
+
         //Primary Deploy
         Console.WriteLine($"Deploying the Global Resources. This may take a while.");
-        var operation = await resourceGroups.CreateOrUpdateAsync(WaitUntil.Completed, primaryRegionResourceGroupName, new ResourceGroupData(AzureLocation.CentralUS));
+        var operation = await resourceGroups.CreateOrUpdateAsync(WaitUntil.Completed, primaryRegionResourceGroupName, new ResourceGroupData(primaryRegion));
         var primaryResourceGroup = operation.Value;
         var ArmDeploymentCollection = primaryResourceGroup.GetArmDeployments();
 
-        var primaryServiceNames = new AzureServiceNames(projectName, env, uniqueString, AzureLocation.CentralUS);
+        var primaryServiceNames = new AzureServiceNames(projectName, env, uniqueString, primaryRegion);
         await DeployARM(ArmDeploymentCollection, primaryServiceNames, configs, services, env, "Primary");
+
 
         //Regional Deploys
         Console.WriteLine($"Deploying the Regional Resources. This may take a while.");
-        operation = await resourceGroups.CreateOrUpdateAsync(WaitUntil.Completed, $"{rgPrefix}-{AzureLocation.CentralUS}", new ResourceGroupData(AzureLocation.CentralUS));
-        var regionalResourceGroup = operation.Value;
-        ArmDeploymentCollection = regionalResourceGroup.GetArmDeployments();
 
-        var regionalServiceNames = new AzureServiceNames(projectName, env, uniqueString, AzureLocation.CentralUS);
-        await DeployARM(ArmDeploymentCollection, regionalServiceNames, configs, services, env, "Regional");
-
-        //Link resources. Regional cuz KV is regional
-        //SSL Cert creation https://github.com/Azure/azure-quickstart-templates/tree/master/application-workloads/umbraco/umbraco-webapp-simple
-        Console.WriteLine($"Linking the Resources");
-        await DeployARM(ArmDeploymentCollection, regionalServiceNames, configs, services, env, "Link");
-
-        if (env == Environments.Dev)
+        foreach (var region in regions)
         {
-            configs.Add(regionalServiceNames.ServiceNameMap[AzureServices.KeyVault].Key, regionalServiceNames.ServiceNameMap[AzureServices.KeyVault].Value);
+            operation = await resourceGroups.CreateOrUpdateAsync(WaitUntil.Completed, $"{rgPrefix}-{region}", new ResourceGroupData(region));
+            var regionalResourceGroup = operation.Value;
+            ArmDeploymentCollection = regionalResourceGroup.GetArmDeployments();
+
+            var regionalServiceNames = new AzureServiceNames(projectName, env, uniqueString, region);
+            await DeployARM(ArmDeploymentCollection, regionalServiceNames, configs, services, env, "Regional");
+
+            //Link resources. Regional cuz KV is regional
+            //SSL Cert creation https://github.com/Azure/azure-quickstart-templates/tree/master/application-workloads/umbraco/umbraco-webapp-simple
+            await DeployARM(ArmDeploymentCollection, regionalServiceNames, configs, services, env, "Link");
+
+            if (env == Environments.Dev)
+            {
+                configs.Add(regionalServiceNames.ServiceNameMap[AzureServices.KeyVault].Key, regionalServiceNames.ServiceNameMap[AzureServices.KeyVault].Value);
+            }
         }
+
+        /*
+        if (env == Environments.P1)
+        {
+            //Do Failover Region here
+        }
+        */
 
         return true;
     }
@@ -102,14 +123,6 @@ public static class AzureProvisioner
     {
         var templateFile = $"{AppDomain.CurrentDomain.BaseDirectory}Data/Azure/{env}/{templateName}.json";
         var parameterFile = $"{AppDomain.CurrentDomain.BaseDirectory}Data/Azure/{env}/{templateName}.Parameters.json";
-
-        /* Deal with unnecessary failover deployment
-        if (System.IO.File.Exists(templateFile))
-        {
-            Console.WriteLine($"Info: Not deploying {templateName}");
-            return;
-        }
-        */
 
         var template = System.IO.File.ReadAllText(templateFile);
         var parameters = System.IO.File.ReadAllText(parameterFile);
