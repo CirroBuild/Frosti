@@ -42,6 +42,7 @@
   },
   "resources": [
     {
+      "condition": "[contains(parameters('services'), 'Cosmos')]",
       "type": "Microsoft.KeyVault/vaults/secrets",
       "apiVersion": "2021-11-01-preview",
       "name": "[format('{0}/{1}', parameters('keyVaultName'), 'CosmosConnection')]",
@@ -50,6 +51,7 @@
       }
     },
     {
+      "condition": "[contains(parameters('services'), 'SQL')]",
       "type": "Microsoft.KeyVault/vaults/secrets",
       "apiVersion": "2021-11-01-preview",
       "name": "[format('{0}/{1}', parameters('keyVaultName'), 'SQLConnection')]",
@@ -58,6 +60,7 @@
       }
     },
     {
+      "condition": "[contains(parameters('services'), 'Storage')]",
       "type": "Microsoft.KeyVault/vaults/secrets",
       "apiVersion": "2021-11-01-preview",
       "name": "[format('{0}/{1}', parameters('keyVaultName'), 'StorageConnection')]",

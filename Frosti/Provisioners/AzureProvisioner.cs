@@ -2,12 +2,12 @@
 using Azure.Identity;
 using Azure.ResourceManager;
 using Azure.ResourceManager.Resources;
-using Microsoft.Graph;
 using System.Text.RegularExpressions;
 using Azure;
 using Azure.Core;
 using Azure.ResourceManager.Resources.Models;
 using System.Diagnostics;
+using System.Reflection;
 
 namespace Frosti.Provisioners;
 public static class AzureProvisioner
@@ -17,7 +17,7 @@ public static class AzureProvisioner
 
         SubscriptionResource? subscription;
         var client = new ArmClient(credential);
-
+        //var email = client.name
         if (subId == null)
         {
             subscription = await client.GetDefaultSubscriptionAsync();
@@ -49,13 +49,14 @@ public static class AzureProvisioner
 
         if (userinput?.Trim().ToLower() != "y" && userinput?.Trim().ToLower() != "yes")
         {
-            Console.WriteLine("Exiting. Nothing has been provisioned.");
+            Console.WriteLine("Exiting. Nothing has been provisioned. Please check the SDKs used and remove anything not needed.");
             return false;
         }
 
         var resourceGroups = subscription.GetResourceGroups();
 
-        var rgPrefix = $"{projectName}-{env}";
+        var envSuffix = env == Environments.Dev ? configs["USERNAME"].Substring(0,4).ToLower() : env;
+        var rgPrefix = $"{projectName}-{envSuffix}";
         var uniqueString = Constants.GetUniqueString(subscription.Data.SubscriptionId, rgPrefix);
 
         if (services.Contains(AzureServices.WebApp) || services.Contains(AzureServices.FunctionApp))
@@ -64,7 +65,7 @@ public static class AzureProvisioner
             configs.Add("__FUNCTIONPLANNAME__", $"{projectName}-FunctionPlan-{uniqueString}".Substring(0, 40));
         }
 
-        if (services.Contains(AzureServices.SQL) || services.Contains(AzureServices.MySql) || services.Contains(AzureServices.MySql))
+        if (services.Contains(AzureServices.SQL) || services.Contains(AzureServices.MySql) || services.Contains(AzureServices.PostgreSQL))
         {
             configs.Add("__SQLPASSWORD__", Guid.NewGuid().ToString());
         }
@@ -73,17 +74,27 @@ public static class AzureProvisioner
         configs.Add("__PRIMARYRGNAME__", primaryRegionResourceGroupName);
 
         //Define regions
-        var regions = AzureLocations.Transformer[primaryLocation].Take( Locations.EnvLocationCount[env]);
+        var regions = AzureLocations.Transformer[primaryLocation].Take(Locations.EnvLocationCount[env]);
         var primaryRegion = regions.First();
 
+        ResourceGroupResource? primaryResourceGroup;
 
         //Primary Deploy
         Console.WriteLine($"Deploying the Global Resources. This may take a while.");
         var operation = await resourceGroups.CreateOrUpdateAsync(WaitUntil.Completed, primaryRegionResourceGroupName, new ResourceGroupData(primaryRegion));
-        var primaryResourceGroup = operation.Value;
-        var ArmDeploymentCollection = primaryResourceGroup.GetArmDeployments();
 
-        var primaryServiceNames = new AzureServiceNames(projectName, env, uniqueString, primaryRegion);
+        try
+        {
+            primaryResourceGroup = operation.Value;
+        }
+        catch
+        {
+            Console.WriteLine("It seems this resource group already exists in a different region. Nothing has been provisioned. Please try again with a different project name");
+            return false;
+        }
+
+        var ArmDeploymentCollection = primaryResourceGroup.GetArmDeployments();
+        var primaryServiceNames = new AzureServiceNames(projectName, envSuffix, uniqueString, primaryRegion);
         await DeployARM(ArmDeploymentCollection, primaryServiceNames, configs, services, env, "Primary");
 
 
@@ -96,7 +107,7 @@ public static class AzureProvisioner
             var regionalResourceGroup = operation.Value;
             ArmDeploymentCollection = regionalResourceGroup.GetArmDeployments();
 
-            var regionalServiceNames = new AzureServiceNames(projectName, env, uniqueString, region);
+            var regionalServiceNames = new AzureServiceNames(projectName, envSuffix, uniqueString, region);
             await DeployARM(ArmDeploymentCollection, regionalServiceNames, configs, services, env, "Regional");
 
             //Link resources. Regional cuz KV is regional
@@ -121,11 +132,15 @@ public static class AzureProvisioner
 
     private static async Task DeployARM(ArmDeploymentCollection ArmDeploymentCollection, AzureServiceNames servceNames, Dictionary<string, string> configs, HashSet<string> services, string env, string templateName)
     {
-        var templateFile = $"{AppDomain.CurrentDomain.BaseDirectory}Data/Azure/{env}/{templateName}.json";
-        var parameterFile = $"{AppDomain.CurrentDomain.BaseDirectory}Data/Azure/{env}/{templateName}.Parameters.json";
+        var assembly = Assembly.GetExecutingAssembly();
+        var templateFile = $"Frosti.Data.Azure.{env}.{templateName}.json";
+        var parameterFile = $"Frosti.Data.Azure.{env}.{templateName}.Parameters.json";
 
-        var template = System.IO.File.ReadAllText(templateFile);
-        var parameters = System.IO.File.ReadAllText(parameterFile);
+        using var templateStream = new StreamReader(assembly.GetManifestResourceStream(templateFile));
+        using var paramteterStream = new StreamReader(assembly.GetManifestResourceStream(parameterFile));
+
+        var template = await templateStream.ReadToEndAsync();
+        var parameters = await paramteterStream.ReadToEndAsync();
 
         foreach (var config in configs)
         {

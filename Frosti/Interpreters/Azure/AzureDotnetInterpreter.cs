@@ -7,9 +7,10 @@ namespace Frosti.Interpreters;
 
 public static class AzureDotnetInterpreter
 {
-    public static async Task Interpret(string env, AzureCliCredential credential, Dictionary<string, string> configs, HashSet<string> services)
+    public static async Task<string> Interpret(string env, AzureCliCredential credential, Dictionary<string, string> configs, HashSet<string> services)
     {
 
+        var csprojName = "";
         var csprojData = "";
 
         var csprojFiles = System.IO.Directory.GetFiles(Environment.CurrentDirectory, "*.csproj", SearchOption.AllDirectories);
@@ -24,10 +25,11 @@ public static class AzureDotnetInterpreter
 
         try
         {
-            foreach (var csprojFile in csprojFiles)
+            foreach (var csprojFile in csprojFiles) //instead of appending, each csproj should be inetterpreted, provisioned and connected independently
             {
                 using var reader = new StreamReader(csprojFile);
                 csprojData += await reader.ReadToEndAsync();
+                csprojName = Path.GetFileName(csprojFile).Replace(".csproj", "");
             }
         }
         catch (IOException e)
@@ -51,11 +53,17 @@ public static class AzureDotnetInterpreter
             var users = await graphClient.Users
                 .Request()
                 .GetAsync();
-            var principalId = users.FirstOrDefault()?.Id;
+            var user = users.CurrentPage.FirstOrDefault();
 
-            if (principalId != null)
+            if (user?.Surname != null)
             {
-                configs.Add("__USERPRINCIPALID__", principalId);
+                configs.Add("USERNAME", user.Surname);
+            }
+
+            if (user?.Id != null)
+            {
+                configs.Add("__USERPRINCIPALID__", user.Id);
+
                 services.Add(AzureServices.DevUser);
             }
 
@@ -75,6 +83,8 @@ public static class AzureDotnetInterpreter
         configs.Add("\"__SERVICES__\"", "[\"" + string.Join("\",\"", services) + "\"]");
 
         Console.WriteLine("Completed Interpretting");
+
+        return csprojName;
     }
 }
 

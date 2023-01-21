@@ -17,6 +17,12 @@ public class Parser
 {
     public static async Task<int> Main(string[] args)
     {
+        if (args.Length == 0 || (args.Length > 0 && args[0] != "provision"))
+        {
+            Console.WriteLine("Something doesn't seem right. Did you mean to run the command `frosti provision`?");
+            return 1;
+        }
+
         var flags = CommandLine.Parser.Default.ParseArguments<ArgumentFlags>(args);
 
         var cloud = Clouds.Azure; //flags.Value.Cloud.ToLower();
@@ -28,7 +34,7 @@ public class Parser
         var primaryLocation = Locations.NorthAmerica; //flags.Value.Location;
         //for values above, check if they are one of expected values
 
-        if (projectName.Length > 10 || projectName.Length < 5)
+        if (string.IsNullOrWhiteSpace(projectName) == false && (projectName.Length > 10 || projectName.Length < 5))
         {
             Console.WriteLine("The name to prefix the infrastrucutre needs to be between 5-10 character. Please see doc {insert doc link}");
             return 1;

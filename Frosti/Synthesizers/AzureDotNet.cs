@@ -13,9 +13,11 @@ public static class AzureDotNet
         var configs = new Dictionary<string, string>();
         var credential = new AzureCliCredential();
 
-        await AzureDotnetInterpreter.Interpret(env, credential, configs, services);
+        var csProjName = await AzureDotnetInterpreter.Interpret(env, credential, configs, services);
+        projectName = string.IsNullOrEmpty(projectName) ? csProjName.Substring(0,8) : projectName;
+
         var provisioned = await AzureProvisioner.Provision(projectName, env, subId, credential, configs, services, primaryLocation);
-        if (provisioned && autoConnect)
+        if (provisioned)
         {
             await AzureDotnetConnector.Connect(env, configs, services);
         }

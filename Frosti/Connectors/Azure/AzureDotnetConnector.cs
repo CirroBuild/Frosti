@@ -7,6 +7,27 @@ namespace Frosti.Connectors;
     {
 
         var appsettingFile = System.IO.Directory.GetFiles(Environment.CurrentDirectory, "appsettings.json", SearchOption.AllDirectories).FirstOrDefault();
+        if (string.IsNullOrEmpty(appsettingFile))
+        {
+            throw new Exception($"No appsettings.json and/or Program.cs file is found within this project. Cannot automatically connect resources.");
+        }
+        var gitIgnoreFile = appsettingFile.Replace("appsettings.json", ".gitignore");
+        var frostiAppSettingsFile = appsettingFile.Replace("appsettings", "appsettings.frosti");
+
+        if (File.Exists(frostiAppSettingsFile) == false)
+        {
+            File.AppendAllLines(gitIgnoreFile, new string[]
+            {
+                "appsettings.frosti.json"
+            });
+        }
+        if (File.Exists(frostiAppSettingsFile) == false)
+        {
+            File.WriteAllLines(frostiAppSettingsFile, new string[] { "{", $"\t\"KV_Endpoint\": \"{configs["__KEYVAULTNAME__"]}\"", "}" });
+        }
+
+
+        /*
         var programFile = System.IO.Directory.GetFiles(Environment.CurrentDirectory, "Program.cs", SearchOption.AllDirectories).FirstOrDefault();
 
         if (string.IsNullOrEmpty(appsettingFile) || string.IsNullOrEmpty(programFile))
@@ -70,7 +91,7 @@ namespace Frosti.Connectors;
             System.IO.File.WriteAllLines(programFile, finalProgram);
             System.IO.File.AppendAllLines(frostiServicesFile, newServices);
         }
-
+        */
         Console.WriteLine("Completed Linking");
     }
 }
