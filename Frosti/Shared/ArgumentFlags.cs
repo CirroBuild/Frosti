@@ -10,11 +10,11 @@ public class ArgumentFlags
     //[Option('c', "cloud", HelpText = "Please specify the cloud with -c. See docs on getting started here: {doc-link}", Default = Clouds.Azure)]
     //public string Cloud { get; set; } = Clouds.Azure;
 
-    [Option('n', "name", HelpText = "Specify the name to override the default project prefix for the infrastructure. See docs on getting started here: {doc-link}")]
+    [Option('n', "name", HelpText = "The name to override the default project prefix for the infrastructure. See docs: {doc-link}")]
     public string ProjectName { get; set; } = string.Empty;
 
-    //[Option('e', "sku", HelpText = "Please specify the name to prefix the infrastructure with -e. Please see doc {insert doc link}", Default = Environments.Dev)]
-    //public string Enviornment { get; set; } = Environments.Dev;
+    [Option('e', "environment", HelpText = "The environment to setup the infrastructure. One of 'dev', 'ppe', or 'prod'. See docs: {insert doc link}", Default = Environments.Dev)]
+    public string Enviornment { get; set; } = Environments.Dev;
 
     //[Option('l', "location", HelpText = "The primary region for the resources. Please see doc {insert doc link}", Default = Locations.NorthAmerica)]
     //public string Location { get; set; } = Locations.NorthAmerica;

@@ -27,7 +27,7 @@ public class Parser
 
         var cloud = Clouds.Azure; //flags.Value.Cloud.ToLower();
         var projectName = flags.Value.ProjectName;
-        var env = Environments.Dev; //flags.Value.Enviornment.ToLower();
+        var env = flags.Value.Enviornment.ToLower();
         var framework = Frameworks.DotNet; //flags.Value.Framework?.ToLower();
         var subId = flags.Value.SubscriptionId;
         var autoConnect = flags.Value.AutoConnect;
@@ -39,6 +39,14 @@ public class Parser
             Console.WriteLine("The name to prefix the infrastrucutre needs to be between 5-10 character. Please see doc {insert doc link}");
             return 1;
         }
+
+        if (Environments.Supported.Contains(env) == false)
+        {
+            Console.WriteLine($"{env} is not supported. Supported envioronments are: {string.Join(", ", Environments.Supported)}");
+            return 1;
+        }
+
+        //check user authenticated to deploy ppe/prod here
 
         if (string.IsNullOrEmpty(framework))
         {
