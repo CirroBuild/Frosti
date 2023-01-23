@@ -47,7 +47,7 @@
       "apiVersion": "2021-11-01-preview",
       "name": "[format('{0}/{1}', parameters('keyVaultName'), 'CosmosConnection')]",
       "properties": {
-        "value": "[listConnectionStrings(resourceId(parameters('primaryRegionResourceGroupName'),'Microsoft.DocumentDB/databaseAccounts', parameters('cosmosName')), '2019-12-12').connectionStrings[0].connectionString]"
+        "value": "[if(contains(parameters('services'), 'Cosmos'), listConnectionStrings(resourceId(parameters('primaryRegionResourceGroupName'),'Microsoft.DocumentDB/databaseAccounts', parameters('cosmosName')), '2019-12-12').connectionStrings[0].connectionString, 'blank')]"
       }
     },
     {
@@ -56,7 +56,7 @@
       "apiVersion": "2021-11-01-preview",
       "name": "[format('{0}/{1}', parameters('keyVaultName'), 'SQLConnection')]",
       "properties": {
-        "value": "[format('Data Source=tcp:{0},1433;Initial Catalog={1};User Id={2}@{3};Password={4};', reference(resourceId(parameters('primaryRegionResourceGroupName'),'Microsoft.Sql/servers', parameters('sqlserverName')), '2022-05-01-preview').fullyQualifiedDomainName, 'master', 'FrostiAdmin', reference(resourceId(parameters('primaryRegionResourceGroupName'),'Microsoft.Sql/servers', parameters('sqlserverName')),'2022-05-01-preview').fullyQualifiedDomainName, parameters('sqlPassword'))]"
+        "value": "[if(contains(parameters('services'), 'SQL'), format('Data Source=tcp:{0},1433;Initial Catalog={1};User Id={2}@{3};Password={4};', reference(resourceId(parameters('primaryRegionResourceGroupName'),'Microsoft.Sql/servers', parameters('sqlserverName')), '2022-05-01-preview').fullyQualifiedDomainName, 'master', 'FrostiAdmin', reference(resourceId(parameters('primaryRegionResourceGroupName'),'Microsoft.Sql/servers', parameters('sqlserverName')),'2022-05-01-preview').fullyQualifiedDomainName, parameters('sqlPassword')), 'blank')]"
       }
     },
     {
@@ -65,7 +65,7 @@
       "apiVersion": "2021-11-01-preview",
       "name": "[format('{0}/{1}', parameters('keyVaultName'), 'StorageConnection')]",
       "properties": {
-        "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('storageName'), ';AccountKey=', listKeys(resourceId(parameters('primaryRegionResourceGroupName'),'Microsoft.Storage/storageAccounts', parameters('storageName')), '2019-04-01').keys[0].value,';EndpointSuffix=core.windows.net')]"
+        "value": "[if(contains(parameters('services'), 'Storage'), concat('DefaultEndpointsProtocol=https;AccountName=', parameters('storageName'), ';AccountKey=', listKeys(resourceId(parameters('primaryRegionResourceGroupName'),'Microsoft.Storage/storageAccounts', parameters('storageName')), '2019-04-01').keys[0].value,';EndpointSuffix=core.windows.net'), 'blank')]"
       }
     }
   ]

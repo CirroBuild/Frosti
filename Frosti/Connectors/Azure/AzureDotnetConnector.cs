@@ -3,7 +3,7 @@ namespace Frosti.Connectors;
 
 	public class AzureDotnetConnector
 {
-    public static async Task Connect(string env, Dictionary<string, string> configs, HashSet<string> services)
+    public static async Task Connect(Dictionary<string, string> configs, HashSet<string> services)
     {
 
         var appsettingFile = System.IO.Directory.GetFiles(Environment.CurrentDirectory, "appsettings.json", SearchOption.AllDirectories).FirstOrDefault();

@@ -19,7 +19,10 @@ public static class AzureDotNet
         var provisioned = await AzureProvisioner.Provision(projectName, env, subId, credential, configs, services, primaryLocation);
         if (provisioned)
         {
-            await AzureDotnetConnector.Connect(env, configs, services);
+            if (env == Environments.Dev)
+            {
+                await AzureDotnetConnector.Connect(configs, services);
+            }
         }
 
         return 0;

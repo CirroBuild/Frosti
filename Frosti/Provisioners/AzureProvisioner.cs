@@ -44,13 +44,16 @@ public static class AzureProvisioner
         List<string> ignoreServices = new() { AzureServices.DevUser, AzureServices.ManagedIdentity, AzureServices.KeyVault };
         Console.WriteLine($"Services to be provisioned: Managed Identity (required), Keyvault (required), {string.Join(", ", services.Where(x => ignoreServices.Contains(x) == false))}");
 
-        Console.WriteLine("Is this correct? (Y/n)");
-        string? userinput = Console.ReadLine();
-
-        if (userinput?.Trim().ToLower() != "y" && userinput?.Trim().ToLower() != "yes")
+        if (env == Environments.Dev)
         {
-            Console.WriteLine("Exiting. Nothing has been provisioned. Please check the SDKs used and remove anything not needed.");
-            return false;
+            Console.WriteLine("Is this correct? (Y/n)");
+            string? userinput = Console.ReadLine();
+
+            if (userinput?.Trim().ToLower() != "y" && userinput?.Trim().ToLower() != "yes")
+            {
+                Console.WriteLine("Exiting. Nothing has been provisioned. Please check the SDKs used and remove anything not needed.");
+                return false;
+            }
         }
 
         var resourceGroups = subscription.GetResourceGroups();
@@ -99,10 +102,10 @@ public static class AzureProvisioner
 
 
         //Regional Deploys
-        Console.WriteLine($"Deploying the Regional Resources. This may take a while.");
-
+        //parrallelize in the future
         foreach (var region in regions)
         {
+            Console.WriteLine($"Deploying the {region} Resources. This may take a while.");
             operation = await resourceGroups.CreateOrUpdateAsync(WaitUntil.Completed, $"{rgPrefix}-{region}", new ResourceGroupData(region));
             var regionalResourceGroup = operation.Value;
             ArmDeploymentCollection = regionalResourceGroup.GetArmDeployments();
@@ -112,6 +115,7 @@ public static class AzureProvisioner
 
             //Link resources. Regional cuz KV is regional
             //SSL Cert creation https://github.com/Azure/azure-quickstart-templates/tree/master/application-workloads/umbraco/umbraco-webapp-simple
+            Console.WriteLine($"Linking the {region} Resources. This may take a while.");
             await DeployARM(ArmDeploymentCollection, regionalServiceNames, configs, services, env, "Link");
 
             if (env == Environments.Dev)

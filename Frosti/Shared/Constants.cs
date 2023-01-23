@@ -30,10 +30,10 @@ public static class Frameworks
 public static class Environments
 {
     public const string Dev = "dev";
-    public const string S1 = "s1";
-    public const string P1 = "p1";
+    public const string PPE = "ppe";
+    public const string Prod = "prod";
 
-    public static readonly List<string> Supported = new() { Dev, S1, P1 };
+    public static readonly List<string> Supported = new() { Dev, PPE, Prod };
 }
 
 public static class Locations
@@ -48,8 +48,8 @@ public static class Locations
     public static readonly Dictionary<string, int> EnvLocationCount = new()
     {
         {Environments.Dev , 1},
-        {Environments.S1, 2},
-        {Environments.P1, 4}
+        {Environments.PPE, 2},
+        {Environments.Prod, 4}
     };
 }
 

@@ -30,6 +30,9 @@ public static class AzureDotnetInterpreter
                 using var reader = new StreamReader(csprojFile);
                 csprojData += await reader.ReadToEndAsync();
                 csprojName = Path.GetFileName(csprojFile).Replace(".csproj", "");
+
+                Regex rgx = new Regex("[^a-zA-Z0-9 -]");
+                csprojName = rgx.Replace(csprojName, "");
             }
         }
         catch (IOException e)
