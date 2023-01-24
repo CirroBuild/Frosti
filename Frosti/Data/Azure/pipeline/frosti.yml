@@ -1,0 +1,65 @@
+jobs:
+- job: InfraDeploy
+  pool:
+    vmImage: macOS-latest
+  steps:
+    - task: AzureCLI@2
+      displayName: Run frosti
+      inputs:
+        azureSubscription: 'Trial (9d2c0470-601c-4f53-9cd4-d4bfc213328a)'
+        scriptType: ps
+        scriptLocation: inlineScript
+        inlineScript: |
+          az --version
+          az account show
+          brew update
+          brew install CirroBuild/tap/frosti
+          frosti provision -e ppe
+
+- job: BuildProject
+  pool:
+    vmImage: macOS-latest
+  steps:
+    - task: DotNetCoreCLI@2
+      displayName: dotnet restore
+      inputs:
+        command: restore
+        projects: __CSPROJNAME__.csproj
+    - task: DotNetCoreCLI@2
+      displayName: dotnet build
+      inputs:
+        command: build
+        projects: __CSPROJNAME__.csproj
+        arguments: -c $(buildConfiguration)
+    - task: DotNetCoreCLI@2
+      displayName: dotnet publish
+      inputs:
+        command: publish
+        projects: __CSPROJNAME__.csproj
+        arguments: -c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)/publish
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Artifact: __CSPROJNAME__'
+      inputs:
+        PathtoPublish: $(Build.ArtifactStagingDirectory)/publish
+        ArtifactName: __CSPROJNAME__
+
+- job: CodeDeploy
+  dependsOn: 
+  - InfraDeploy
+  - BuildProject
+  pool:
+    vmImage: macOS-latest
+  steps:
+    - task: DownloadBuildArtifacts@1
+      inputs:
+        buildType: 'current'
+        downloadType: 'single'
+        artifactName: '__CSPROJNAME__'
+        downloadPath: '$(System.DefaultWorkingDirectory)'
+    - task: AzureRmWebAppDeployment@4
+      inputs:
+        ConnectionType: 'AzureRM'
+        azureSubscription: 'Trial (9d2c0470-601c-4f53-9cd4-d4bfc213328a)'
+        appType: 'webAppLinux'
+        WebAppName: 'ProjectF-ppe-eus-WebAppe48693fc8'
+        packageForLinux: '$(System.DefaultWorkingDirectory)/**/*.zip'
