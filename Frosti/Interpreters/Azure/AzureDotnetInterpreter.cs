@@ -31,8 +31,14 @@ public static class AzureDotnetInterpreter
                 csprojData += await reader.ReadToEndAsync();
                 csprojName = Path.GetFileName(csprojFile).Replace(".csproj", "");
 
+                if (configs.ContainsKey("") == false)
+                {
+                    configs.Add("__CSPROJNAME__", csprojName);
+                }
+
                 Regex rgx = new Regex("[^a-zA-Z0-9 -]");
                 csprojName = rgx.Replace(csprojName, "");
+
             }
         }
         catch (IOException e)

@@ -17,6 +17,13 @@ public class Parser
 {
     public static async Task<int> Main(string[] args)
     {
+
+        if (args.Length > 0 && (args[0] == "-v" || args[0] == "version"))
+        {
+            Console.WriteLine("v1.1.preview");
+            return 0;
+        }
+
         if (args.Length == 0 || (args.Length > 0 && args[0] != "provision"))
         {
             Console.WriteLine("Something doesn't seem right. Did you mean to run the command `frosti provision`?");

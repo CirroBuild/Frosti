@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Reflection;
+
 namespace Frosti.Connectors;
 
 	public class AzureDotnetConnector
@@ -13,6 +15,7 @@ namespace Frosti.Connectors;
         }
         var gitIgnoreFile = appsettingFile.Replace("appsettings.json", ".gitignore");
         var frostiAppSettingsFile = appsettingFile.Replace("appsettings", "appsettings.frosti");
+        var frostiYmlFile = appsettingFile.Replace("appsettings.json", "frosti.yml");
 
         if (File.Exists(frostiAppSettingsFile) == false)
         {
@@ -26,6 +29,13 @@ namespace Frosti.Connectors;
             File.WriteAllLines(frostiAppSettingsFile, new string[] { "{", $"\t\"KV_Endpoint\": \"{configs["__KEYVAULTNAME__"]}\"", "}" });
         }
 
+        var pipelineFile = $"Frosti.Data.Azure.pipeline.frosti.yml";
+        var assembly = Assembly.GetExecutingAssembly();
+        using var pipelineStrean = new StreamReader(assembly.GetManifestResourceStream(pipelineFile));
+
+        var pipeline = await pipelineStrean.ReadToEndAsync();
+        pipeline = pipeline.Replace("__CSPROJNAME__", configs["__CSPROJNAME__"]);
+        await File.WriteAllTextAsync(frostiYmlFile, pipeline);
 
         /*
         var programFile = System.IO.Directory.GetFiles(Environment.CurrentDirectory, "Program.cs", SearchOption.AllDirectories).FirstOrDefault();
