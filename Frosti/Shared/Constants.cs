@@ -48,7 +48,7 @@ public static class Locations
     public static readonly Dictionary<string, int> EnvLocationCount = new()
     {
         {Environments.Dev , 1},
-        {Environments.PPE, 2},
+        {Environments.PPE, 1},
         {Environments.Prod, 4}
     };
 }

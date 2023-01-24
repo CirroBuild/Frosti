@@ -71,7 +71,7 @@ public class AzureServiceNames
     public KeyValuePair<string, string> MySql => new("__MYSQLNAME__", $"{ResourcePrefix}-MySQL-{UniqueString}".Substring(0,63));
     public KeyValuePair<string, string> PostgreSQL => new("__POSTGRESQLNAME__", $"{ResourcePrefix}-PostgreSql-{UniqueString}".Substring(0, 63));
     public KeyValuePair<string, string> KeyVault => new("__KEYVAULTNAME__", $"{ResourcePrefix}-KV{UniqueString}".Substring(0, 24));
-    public KeyValuePair<string, string> ManagedIdentity => new("__MANAGEDIDENTITYNAME__", $"{ResourcePrefix}-ManagedIdentity-{UniqueString}".Substring(0, 50));
+    public KeyValuePair<string, string> ManagedIdentity => new("__MANAGEDIDENTITYNAME__", $"{ProjectName}-{Enviornment}-ManagedIdentity-{UniqueString}".Substring(0, 50)); //shouldnt be region specfici via resource prefix
 
     public Dictionary<string, KeyValuePair<string, string>> ServiceNameMap => new()
     {
