@@ -26,7 +26,8 @@ namespace Frosti.Connectors;
         }
         if (File.Exists(frostiAppSettingsFile) == false)
         {
-            File.WriteAllLines(frostiAppSettingsFile, new string[] { "{", $"\t\"KV_Endpoint\": \"{configs["__KEYVAULTNAME__"]}\"", "}" });
+            var kvUrl = $"https://{configs["__KEYVAULTNAME__"]}.vault.azure.net/";
+            File.WriteAllLines(frostiAppSettingsFile, new string[] { "{", $"\t\"KV_Endpoint\": \"{kvUrl}\"", "}" });
         }
 
         var pipelineFile = $"Frosti.Data.Azure.pipeline.frosti.yml";

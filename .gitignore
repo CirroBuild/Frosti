@@ -5,4 +5,5 @@ Frosti/bin/
 Frosti/obj/
 Frosti/intel/
 Frosti/arm64/
+Frosti/win*
 Frosti-v*
