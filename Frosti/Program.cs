@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.IO;
+using System.Net;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using Azure;
@@ -10,7 +11,10 @@ using Azure.ResourceManager.Resources;
 using Azure.ResourceManager.Resources.Models;
 using Frosti.Shared;
 using Frosti.Synthesizers;
+using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.Graph;
+using Microsoft.IdentityModel.Abstractions;
 
 namespace Frosti;
 public class Parser
@@ -29,6 +33,13 @@ public class Parser
             Console.WriteLine("Something doesn't seem right. Did you mean to run the command `frosti provision`?");
             return 1;
         }
+
+        var config = TelemetryConfiguration.CreateDefault();
+        config.InstrumentationKey = "4471d06d-aa90-438a-a969-3cb424e24168";
+
+        var telemetry = new TelemetryClient(config);
+        telemetry.TrackTrace($"Running frosti provision from: {Dns.GetHostName()}");
+        telemetry.Flush();
 
         var flags = CommandLine.Parser.Default.ParseArguments<ArgumentFlags>(args);
 
