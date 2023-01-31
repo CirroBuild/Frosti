@@ -47,15 +47,28 @@
           "serverFarmId": "[resourceId(parameters('primaryRegionResourceGroupName'), 'Microsoft.Web/serverfarms', parameters('webPlanName'))]",
           "siteConfig": {
             "linuxFxVersion": "[parameters('linuxFxVersion')]",
-            "minTlsVersion": "1.2"
+            "minTlsVersion": "1.2",
+            "appsettings": [
+              {
+                "name": "AZURE_CLIENT_ID",
+                "value": "[reference(variables('managedIdentityResourceId'), '2022-01-31-preview').clientId]"
+              },
+              {
+                "name": "KV_ENDPOINT",
+                "value": "[reference(resourceId('Microsoft.KeyVault/vaults/',parameters('keyVaultName')), '2022-07-01').vaultUri]"
+              }
+            ]
           }
         },
         "identity": {
           "type": "userAssigned",
           "userAssignedIdentities": {
-              "[variables('managedIdentityResourceId')]": {}
+            "[variables('managedIdentityResourceId')]": {}
           }
-        }
+        },
+        "dependsOn": [
+          "[resourceId('Microsoft.KeyVault/vaults/',parameters('keyVaultName'))]"
+        ]
       },
       {
         "type": "Microsoft.KeyVault/vaults",

@@ -65,5 +65,5 @@ jobs:
         ConnectionType: 'AzureRM'
         azureSubscription: '$(ServiceConnection)'
         appType: 'webAppLinux'
-        WebAppName: 'ProjectF-ppe-eus-WebAppe48693fc8'
+        WebAppName: '__WEBAPPNAME__'
         packageForLinux: '$(System.DefaultWorkingDirectory)/**/*.zip'
