@@ -158,6 +158,11 @@ public static class AzureProvisioner
             {
                 var serviceName = servceNames.ServiceNameMap[service];
                 parameters = parameters.Replace(serviceName.Key, serviceName.Value);
+
+                if (templateName == "Regional" && serviceName.Key == "__WEBAPPNAME__")
+                {
+                    Console.WriteLine($"WebAppName:{serviceName.Value}");
+                }
             }
         }
 

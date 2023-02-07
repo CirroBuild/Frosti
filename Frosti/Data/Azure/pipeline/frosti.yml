@@ -18,7 +18,8 @@ jobs:
           az account show
           brew update
           brew install CirroBuild/tap/frosti
-          frosti provision -e ppe
+          $myAppName = frosti provision -e ppe | grep WebAppName | sed -e 's/WebAppName://g'
+          Write-Host "##vso[task.setvariable variable=var01;isOutput=true]$myAppName"
 
 - job: BuildProject
   pool:
@@ -51,6 +52,8 @@ jobs:
   dependsOn: 
   - InfraDeploy
   - BuildProject
+  variables:
+    myWebAppName: $[ dependencies.InfraDeploy.outputs['frosti.var01'] ] 
   pool:
     vmImage: macOS-latest
   steps:
@@ -65,5 +68,5 @@ jobs:
         ConnectionType: 'AzureRM'
         azureSubscription: '$(ServiceConnection)'
         appType: 'webAppLinux'
-        WebAppName: '__WEBAPPNAME__'
+        WebAppName: '$(myWebAppName)'
         packageForLinux: '$(System.DefaultWorkingDirectory)/**/*.zip'
