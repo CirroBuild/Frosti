@@ -270,6 +270,32 @@
       ]
     },
     {
+      "condition": "[contains(parameters('services'), 'SQL')]",
+      "type": "Microsoft.Sql/servers/firewallRules",
+      "apiVersion": "2020-11-01-preview",
+      "name": "[format('{0}/{1}', parameters('sqlServerName'), 'AllowAllWindowsAzureIps')]",
+      "properties": {
+        "endIpAddress": "0.0.0.0",
+        "startIpAddress": "0.0.0.0"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Sql/servers', parameters('sqlServerName'))]"
+      ]
+    },
+    {
+      "condition": "[and(contains(parameters('services'), 'SQL'), contains(parameters('services'), 'DevUser'))]",
+      "type": "Microsoft.Sql/servers/firewallRules",
+      "apiVersion": "2020-11-01-preview",
+      "name": "[format('{0}/{1}', parameters('sqlServerName'), 'AllowAll')]",
+      "properties": {
+        "endIpAddress": "255.255.255.255",
+        "startIpAddress": "0.0.0.0"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Sql/servers', parameters('sqlServerName'))]"
+      ]
+    },
+    {
       "condition": "[contains(parameters('services'), 'MySql')]",
       "type": "Microsoft.DBforMySQL/servers",
       "apiVersion": "2017-12-01",

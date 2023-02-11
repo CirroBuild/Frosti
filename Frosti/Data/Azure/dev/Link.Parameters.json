@@ -8,6 +8,9 @@
   "cosmosName": {
     "value": "__COSMOSNAME__"
   },
+  "appInsightsName": {
+    "value": "__APPINSIGHTSNAME__"
+  },
   "storageName": {
     "value": "__STORAGENAME__"
   },
