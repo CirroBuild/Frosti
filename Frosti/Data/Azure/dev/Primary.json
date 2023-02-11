@@ -270,6 +270,7 @@
       ]
     },
     {
+      "condition": "[contains(parameters('services'), 'SQL')]",
       "type": "Microsoft.Sql/servers/firewallRules",
       "apiVersion": "2020-11-01-preview",
       "name": "[format('{0}/{1}', parameters('sqlServerName'), 'AllowAllWindowsAzureIps')]",
@@ -282,7 +283,7 @@
       ]
     },
     {
-      "condition": "[contains(parameters('services'), 'DevUser')]",
+      "condition": "[and(contains(parameters('services'), 'SQL'), contains(parameters('services'), 'DevUser'))]",
       "type": "Microsoft.Sql/servers/firewallRules",
       "apiVersion": "2020-11-01-preview",
       "name": "[format('{0}/{1}', parameters('sqlServerName'), 'AllowAll')]",
