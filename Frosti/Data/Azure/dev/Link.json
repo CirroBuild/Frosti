@@ -77,7 +77,7 @@
       "apiVersion": "2021-11-01-preview",
       "name": "[format('{0}/{1}', parameters('keyVaultName'), 'AIConnection')]",
       "properties": {
-        "value": "[if(contains(parameters('services'), 'ApplicationInsights'), reference(resourceId('Microsoft.Insights/components', parameters('appInsightsName')), '2020-02-02').ConnectionString, 'blank')]"
+        "value": "[if(contains(parameters('services'), 'ApplicationInsights'), reference(resourceId(parameters('primaryRegionResourceGroupName'),'Microsoft.Insights/components', parameters('appInsightsName')), '2020-02-02').ConnectionString, 'blank')]"
       }
     }
   ]
