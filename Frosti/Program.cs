@@ -35,7 +35,7 @@ public class Parser
         }
 
         var config = TelemetryConfiguration.CreateDefault();
-        config.InstrumentationKey = "4471d06d-aa90-438a-a969-3cb424e24168";
+        config.InstrumentationKey = "4471d06d-aa90-438a-a969-3cb424e24168"; //test with config.connectionString at some point to get in front of instrumentKey deprecation
 
         var telemetry = new TelemetryClient(config);
         telemetry.TrackTrace($"Running frosti provision from: {Dns.GetHostName()}");

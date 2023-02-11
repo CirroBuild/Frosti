@@ -8,6 +8,7 @@ jobs:
     vmImage: macOS-latest
   steps:
     - task: AzureCLI@2
+      name: frosti
       displayName: Run frosti
       inputs:
         azureSubscription: '$(ServiceConnection)'

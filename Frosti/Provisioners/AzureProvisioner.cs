@@ -166,6 +166,12 @@ public static class AzureProvisioner
             }
         }
 
+        //DEBUG
+        /*
+        Console.WriteLine(string.Join(",", parameters));
+        return;
+        */
+
         var deploymentName = Guid.NewGuid().ToString();
         var input = new ArmDeploymentContent(new ArmDeploymentProperties(ArmDeploymentMode.Incremental)
         {
