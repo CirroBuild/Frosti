@@ -10,3 +10,5 @@ rm /opt/homebrew/Library/Taps/homebrew/homebrew-core/Formula/f.rb
 rm /opt/homebrew/Library/Taps/homebrew/homebrew-core/Formula/fr.rb
 rm /opt/homebrew/Library/Taps/homebrew/homebrew-core/Formula/fro.rb
 rm /opt/homebrew/Library/Taps/homebrew/homebrew-core/Formula/fros.rb
+rm /opt/homebrew/Library/Taps/homebrew/homebrew-core/Formula/frost.rb
+rm /opt/homebrew/Library/Taps/homebrew/homebrew-core/Formula/frosti.rb

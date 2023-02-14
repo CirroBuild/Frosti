@@ -41,6 +41,9 @@
   "sqlPassword": {
     "value": "__SQLPASSWORD__"
   },
+  "keyVaultName": {
+    "value": "__KEYVAULTNAME__"
+  },
   "services": {
     "value": "__SERVICES__"
   }

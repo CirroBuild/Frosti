@@ -48,13 +48,17 @@
     "sqlPassword": {
       "type": "string"
     },
+    "keyVaultName": {
+      "type": "string"
+    },
     "services": {
       "type": "array"
     }
   },
   "variables": {
     "managedIdentityResourceId": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities/', parameters('managedIdentityName'))]",
-    "logWorkspaceName": "[concat(parameters('appInsightsName'), '-workspace')]"
+    "logWorkspaceName": "[concat(parameters('appInsightsName'), '-workspace')]",
+    "functionAppStorageName": "[take(replace(toLower(replace(parameters('functionAppName'),'-FunctionApp','fstor')),'-',''), 24)]"
   },
   "resources": [
     {
@@ -116,6 +120,27 @@
     },
     {
       "condition": "[contains(parameters('services'), 'FunctionApp')]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2021-09-01",
+      "name": "[variables('functionAppStorageName')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "Standard_LRS",
+        "tier": "Standard"
+      },
+      "kind": "StorageV2",
+      "identity": {
+        "type": "userAssigned",
+        "userAssignedIdentities": {
+          "[variables('managedIdentityResourceId')]": {}
+        }
+      },
+      "dependsOn": [
+        "[variables('managedIdentityResourceId')]"
+      ]
+    },
+    {
+      "condition": "[contains(parameters('services'), 'FunctionApp')]",
       "type": "Microsoft.Web/sites",
       "apiVersion": "2022-03-01",
       "name": "[parameters('functionAppName')]",
@@ -134,13 +159,18 @@
             {
               "name": "KV_ENDPOINT",
               "value": "[format('https://{0}.vault.azure.net/', parameters('keyVaultName'))]"
+            },
+            {
+              "name": "AzureWebJobsStorage",
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('functionAppStorageName'), ';AccountKey=', listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('functionAppStorageName')), '2019-04-01').keys[0].value,';EndpointSuffix=core.windows.net')]"
             }
           ]
         }
       },
       "dependsOn": [
         "[resourceId('Microsoft.Web/serverfarms/',parameters('functionPlanName'))]",
-        "[variables('managedIdentityResourceId')]"
+        "[variables('managedIdentityResourceId')]",
+        "[variables('functionAppStorageName')]"
       ],
       "identity": {
         "type": "userAssigned",
