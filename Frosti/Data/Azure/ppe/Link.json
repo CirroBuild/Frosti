@@ -15,6 +15,9 @@
     "cosmosName": {
       "type": "string"
     },
+    "appInsightsName": {
+      "type": "string"
+    },
     "storageName": {
       "type": "string"
     },
@@ -66,6 +69,15 @@
       "name": "[format('{0}/{1}', parameters('keyVaultName'), 'StorageConnection')]",
       "properties": {
         "value": "[if(contains(parameters('services'), 'Storage'), concat('DefaultEndpointsProtocol=https;AccountName=', parameters('storageName'), ';AccountKey=', listKeys(resourceId(parameters('primaryRegionResourceGroupName'),'Microsoft.Storage/storageAccounts', parameters('storageName')), '2019-04-01').keys[0].value,';EndpointSuffix=core.windows.net'), 'blank')]"
+      }
+    },
+    {
+      "condition": "[contains(parameters('services'), 'ApplicationInsights')]",
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2021-11-01-preview",
+      "name": "[format('{0}/{1}', parameters('keyVaultName'), 'AIConnection')]",
+      "properties": {
+        "value": "[if(contains(parameters('services'), 'ApplicationInsights'), reference(resourceId(parameters('primaryRegionResourceGroupName'),'Microsoft.Insights/components', parameters('appInsightsName')), '2020-02-02').ConnectionString, 'blank')]"
       }
     }
   ]

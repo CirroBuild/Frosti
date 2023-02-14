@@ -159,9 +159,15 @@ public static class AzureProvisioner
                 var serviceName = servceNames.ServiceNameMap[service];
                 parameters = parameters.Replace(serviceName.Key, serviceName.Value);
 
+                //make generic just use appname, set app_type in config and change yml file to easier logic
                 if (templateName == "Regional" && serviceName.Key == "__WEBAPPNAME__")
                 {
                     Console.WriteLine($"WebAppName:{serviceName.Value}");
+                }
+
+                if (templateName == "Regional" && serviceName.Key == "__FUNCTIONAPPNAME__")
+                {
+                    Console.WriteLine($"FunctionAppName:{serviceName.Value}");
                 }
             }
         }

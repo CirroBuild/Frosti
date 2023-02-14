@@ -7,15 +7,20 @@ namespace Frosti.Connectors;
 {
     public static async Task Connect(Dictionary<string, string> configs, HashSet<string> services)
     {
-
         var appsettingFile = System.IO.Directory.GetFiles(Environment.CurrentDirectory, "appsettings.json", SearchOption.AllDirectories).FirstOrDefault();
+        var appSettingsPrefix = "appsettings.json";
         if (string.IsNullOrEmpty(appsettingFile))
         {
-            throw new Exception($"No appsettings.json and/or Program.cs file is found within this project. Cannot automatically connect resources.");
+            appsettingFile = System.IO.Directory.GetFiles(Environment.CurrentDirectory, "local.settings.json", SearchOption.AllDirectories).FirstOrDefault();
+            appSettingsPrefix = "local.settings.json";
+            if (string.IsNullOrEmpty(appsettingFile))
+            {
+                throw new Exception($"No appsettings.json and/or local.settings.json file is found within this project. Cannot automatically connect resources.");
+            }
         }
-        var gitIgnoreFile = appsettingFile.Replace("appsettings.json", ".gitignore");
-        var frostiAppSettingsFile = appsettingFile.Replace("appsettings", "appsettings.frosti");
-        var frostiYmlFile = appsettingFile.Replace("appsettings.json", "frosti.yml");
+        var gitIgnoreFile = appsettingFile.Replace(appSettingsPrefix, ".gitignore");
+        var frostiAppSettingsFile = appsettingFile.Replace(appSettingsPrefix, "appsettings.frosti.json");
+        var frostiYmlFile = appsettingFile.Replace(appSettingsPrefix, "frosti.yml");
 
         if (File.Exists(frostiAppSettingsFile) == false)
         {

@@ -1,6 +1,6 @@
 variables:
 - name: ServiceConnection
-  value: _YOUR_SERVICE_CONNECTION_ 
+  value: _YOUR_SERVICE_CONNECTION_
 
 jobs:
 - job: InfraDeploy
@@ -19,8 +19,11 @@ jobs:
           az account show
           brew update
           brew install CirroBuild/tap/frosti
-          $myAppName = frosti provision -e ppe | grep WebAppName | sed -e 's/WebAppName://g'
-          Write-Host "##vso[task.setvariable variable=var01;isOutput=true]$myAppName"
+          $myAppNames = frosti provision -e ppe | grep -E 'WebAppName|FunctionAppName' 
+          $myWebApp = $myAppNames | grep WebAppName | sed -e 's/WebAppName://g'
+          $myFunctionApp = $myAppNames | grep FunctionAppName | sed -e 's/FunctionAppName://g'
+          Write-Host "##vso[task.setvariable variable=webApp;isOutput=true]$myWebApp"
+          Write-Host "##vso[task.setvariable variable=functionApp;isOutput=true]$myFunctionApp"
 
 - job: BuildProject
   pool:
@@ -41,6 +44,7 @@ jobs:
       displayName: dotnet publish
       inputs:
         command: publish
+        publishWebProjects: false
         projects: __CSPROJNAME__.csproj
         arguments: -c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)/publish
     - task: PublishBuildArtifacts@1
@@ -54,7 +58,8 @@ jobs:
   - InfraDeploy
   - BuildProject
   variables:
-    myWebAppName: $[ dependencies.InfraDeploy.outputs['frosti.var01'] ] 
+    myWebAppName: $[ dependencies.InfraDeploy.outputs['frosti.webApp'] ] 
+    myFunctionAppName: $[ dependencies.InfraDeploy.outputs['frosti.functionApp'] ] 
   pool:
     vmImage: macOS-latest
   steps:
@@ -65,9 +70,17 @@ jobs:
         artifactName: '__CSPROJNAME__'
         downloadPath: '$(System.DefaultWorkingDirectory)'
     - task: AzureRmWebAppDeployment@4
+      condition: ne(variables.myWebAppName, '')
       inputs:
         ConnectionType: 'AzureRM'
         azureSubscription: '$(ServiceConnection)'
         appType: 'webAppLinux'
         WebAppName: '$(myWebAppName)'
         packageForLinux: '$(System.DefaultWorkingDirectory)/**/*.zip'
+    - task: AzureFunctionApp@1
+      condition: ne(variables.myFunctionAppName, '')
+      inputs:
+        azureSubscription: '$(ServiceConnection)'
+        appType: 'functionAppLinux'
+        appName: '$(myFunctionAppName)'
+        package: '$(System.DefaultWorkingDirectory)/**/*.zip'

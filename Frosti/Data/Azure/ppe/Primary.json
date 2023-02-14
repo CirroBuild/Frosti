@@ -53,7 +53,8 @@
     }
   },
   "variables": {
-    "managedIdentityResourceId": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities/', parameters('managedIdentityName'))]"
+    "managedIdentityResourceId": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities/', parameters('managedIdentityName'))]",
+    "logWorkspaceName": "[concat(parameters('appInsightsName'), '-workspace')]"
   },
   "resources": [
     {
@@ -64,6 +65,18 @@
     },
     {
       "condition": "[contains(parameters('services'), 'ApplicationInsights')]",
+      "type": "Microsoft.OperationalInsights/workspaces",
+      "apiVersion": "2021-12-01-preview",
+      "name": "[variables('logWorkspaceName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "sku": {
+          "name": "PerGB2018"
+        }
+      }
+    },
+    {
+      "condition": "[contains(parameters('services'), 'ApplicationInsights')]",
       "type": "Microsoft.Insights/components",
       "apiVersion": "2020-02-02",
       "name": "[parameters('appInsightsName')]",
@@ -71,8 +84,11 @@
       "kind": "web",
       "properties": {
         "Application_Type": "web",
-        "Request_Source": "IbizaWebAppExtensionCreate"
-      }
+        "WorkspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logWorkspaceName'))]"
+      },
+      "dependsOn": [
+        "[variables('logWorkspaceName')]"
+      ]
     },
     {
       "condition": "[contains(parameters('services'), 'WebApp')]",

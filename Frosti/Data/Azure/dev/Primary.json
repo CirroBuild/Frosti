@@ -125,7 +125,17 @@
         "httpsOnly": true,
         "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('functionPlanName'))]",
         "siteConfig": {
-          "minTlsVersion": "1.2"
+          "minTlsVersion": "1.2",
+          "appsettings": [
+            {
+              "name": "AZURE_CLIENT_ID",
+              "value": "[reference(variables('managedIdentityResourceId'), '2022-01-31-preview').clientId]"
+            },
+            {
+              "name": "KV_ENDPOINT",
+              "value": "[format('https://{0}.vault.azure.net/', parameters('keyVaultName'))]"
+            }
+          ]
         }
       },
       "dependsOn": [
