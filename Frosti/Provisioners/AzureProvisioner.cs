@@ -43,6 +43,7 @@ public static class AzureProvisioner
         Console.WriteLine($"Using subscription: {subscription.Data.SubscriptionId}");
         List<string> ignoreServices = new() { AzureServices.DevUser, AzureServices.ManagedIdentity, AzureServices.KeyVault };
         Console.WriteLine($"Services to be provisioned: Managed Identity (required), Keyvault (required), {string.Join(", ", services.Where(x => ignoreServices.Contains(x) == false))}");
+        Console.WriteLine("Note: WebApp and FunctionApp will not be provisioned in the Dev Enviornment.");
 
         if (env == Environments.Dev)
         {

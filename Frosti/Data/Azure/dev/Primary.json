@@ -58,7 +58,7 @@
   "variables": {
     "managedIdentityResourceId": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities/', parameters('managedIdentityName'))]",
     "logWorkspaceName": "[concat(parameters('appInsightsName'), '-workspace')]",
-    "functionAppStorageName": "[take(replace(toLower(replace(parameters('functionAppName'),'-FunctionApp','fstor')),'-',''), 24)]"
+    "functionAppStorageName": "[if(contains(parameters('services'), 'FunctionApp'), take(replace(toLower(replace(parameters('functionAppName'),'-FunctionApp','fstor')),'-',''), 24), 'blank')]"
   },
   "resources": [
     {
@@ -162,7 +162,7 @@
             },
             {
               "name": "AzureWebJobsStorage",
-              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('functionAppStorageName'), ';AccountKey=', listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('functionAppStorageName')), '2019-04-01').keys[0].value,';EndpointSuffix=core.windows.net')]"
+              "value": "[if(contains(parameters('services'), 'FunctionApp'), concat('DefaultEndpointsProtocol=https;AccountName=', variables('functionAppStorageName'), ';AccountKey=', listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('functionAppStorageName')), '2019-04-01').keys[0].value,';EndpointSuffix=core.windows.net'), 'blank')]"
             }
           ]
         }

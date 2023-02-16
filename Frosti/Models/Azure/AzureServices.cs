@@ -33,7 +33,7 @@ public static class AzureServices   //dotnet specific the sdks to service
         {"Microsoft.ApplicationInsights", ApplicationInsights},
         {"Microsoft.Azure.Cosmos", Cosmos},
         {"StackExchange.Redis", Redis},
-        {"System.Data.SqlClient", SQL},                        //Managed Instance for premium? https://learn.microsoft.com/en-us/azure/azure-sql/managed-instance/create-template-quickstart?view=azuresql&tabs=azure-powershell
+        {"Microsoft.Data.SqlClient", SQL},                        //Managed Instance for premium? https://learn.microsoft.com/en-us/azure/azure-sql/managed-instance/create-template-quickstart?view=azuresql&tabs=azure-powershell
         {"MySql.Data", MySql},                                    //Flexible server for premium? https://learn.microsoft.com/en-us/azure/templates/microsoft.dbformysql/flexibleservers?pivots=deployment-language-arm-template
         {"Npgsql", PostgreSQL}
         //Figure out MariaDb

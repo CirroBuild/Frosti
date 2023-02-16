@@ -64,15 +64,10 @@ public static class AzureDotnetInterpreter
                 .GetAsync();
             var user = users.CurrentPage.FirstOrDefault();
 
-            if (user?.Surname != null)
+            if (user != null)
             {
-                configs.Add("USERNAME", user.Surname);
-            }
-
-            if (user?.Id != null)
-            {
+                configs.Add("USERNAME", string.IsNullOrEmpty(user.Surname) ? user.Id : user.Surname);
                 configs.Add("__USERPRINCIPALID__", user.Id);
-
                 services.Add(AzureServices.DevUser);
             }
 

@@ -1,3 +1,5 @@
+rm Frosti-v*
+
 dotnet publish -c Release /p:PublishSingleFile=true -r osx-x64 --self-contained -o intel
 dotnet publish -c Release /p:PublishSingleFile=true -r osx-arm64 --self-contained -o arm64
 dotnet publish -c Release /p:PublishSingleFile=true -r win-x64 --self-contained -o win64

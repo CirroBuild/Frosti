@@ -58,7 +58,7 @@
   "variables": {
     "managedIdentityResourceId": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities/', parameters('managedIdentityName'))]",
     "logWorkspaceName": "[concat(parameters('appInsightsName'), '-workspace')]",
-    "functionAppStorageName": "[take(replace(toLower(replace(parameters('functionAppName'),'-FunctionApp','fstor')),'-',''), 24)]"
+    "functionAppStorageName": "[if(contains(parameters('services'), 'FunctionApp'), take(replace(toLower(replace(parameters('functionAppName'),'-FunctionApp','fstor')),'-',''), 24), 'blank')]"
   },
   "resources": [
     {
@@ -101,7 +101,7 @@
       "name": "[parameters('webPlanName')]",
       "location": "[parameters('location')]",
       "sku": {
-        "name": "F1"
+        "name": "B1"
       },
       "kind": "linux",
       "properties": {
