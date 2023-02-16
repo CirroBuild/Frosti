@@ -59,10 +59,9 @@ public static class AzureDotnetInterpreter
         if (env.Equals(Environments.Dev))
         {
             var graphClient = new GraphServiceClient(credential);
-            var users = await graphClient.Users
+            var user = await graphClient.Me
                 .Request()
                 .GetAsync();
-            var user = users.CurrentPage.FirstOrDefault();
 
             if (user != null)
             {

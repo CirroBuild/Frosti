@@ -13,6 +13,7 @@ using Frosti.Shared;
 using Frosti.Synthesizers;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Extensibility;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Graph;
 using Microsoft.IdentityModel.Abstractions;
 
@@ -21,7 +22,7 @@ public class Parser
 {
     public static async Task<int> Main(string[] args)
     {
-
+        
         if (args.Length > 0 && (args[0] == "-v" || args[0] == "version"))
         {
             Console.WriteLine("v1.1.preview");
@@ -34,10 +35,14 @@ public class Parser
             return 1;
         }
 
-        var config = TelemetryConfiguration.CreateDefault();
-        config.InstrumentationKey = "4471d06d-aa90-438a-a969-3cb424e24168"; //test with config.connectionString at some point to get in front of instrumentKey deprecation
+        var config = new ConfigurationBuilder()
+            .AddUserSecrets<Parser>()
+            .Build();
 
-        var telemetry = new TelemetryClient(config);
+        var aiConfig = TelemetryConfiguration.CreateDefault();
+        aiConfig.ConnectionString = config["AI_CONNECTION"];
+
+        var telemetry = new TelemetryClient(aiConfig);
         telemetry.TrackTrace($"Running frosti provision from: {Dns.GetHostName()}");
         telemetry.Flush();
 
