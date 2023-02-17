@@ -162,7 +162,7 @@
             },
             {
               "name": "AzureWebJobsStorage",
-              "value": "[if(contains(parameters('services'), 'FunctionApp'), concat('DefaultEndpointsProtocol=https;AccountName=', variables('functionAppStorageName'), ';AccountKey=', listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('functionAppStorageName')), '2019-04-01').keys[0].value,';EndpointSuffix=core.windows.net'), 'blank')]",
+              "value": "[if(contains(parameters('services'), 'FunctionApp'), concat('DefaultEndpointsProtocol=https;AccountName=', variables('functionAppStorageName'), ';AccountKey=', listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('functionAppStorageName')), '2019-04-01').keys[0].value,';EndpointSuffix=core.windows.net'), 'blank')]"
             }
           ]
         }

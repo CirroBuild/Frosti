@@ -20,7 +20,7 @@ namespace Frosti.Connectors;
         }
         var gitIgnoreFile = appsettingFile.Replace(appSettingsPrefix, ".gitignore");
         var frostiAppSettingsFile = appsettingFile.Replace(appSettingsPrefix, "appsettings.frosti.json");
-        var frostiYmlFile = appsettingFile.Replace(appSettingsPrefix, "frosti.yml");
+        var frostiYmlFile = appsettingFile.Replace(appSettingsPrefix, ".github/workflows/frosti.yml");
 
         if (File.Exists(frostiAppSettingsFile) == false)
         {

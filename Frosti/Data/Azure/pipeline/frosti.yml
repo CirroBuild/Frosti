@@ -1,86 +1,94 @@
-variables:
-- name: ServiceConnection
-  value: _YOUR_SERVICE_CONNECTION_
+name: Frosti Provision and Deploy 
+
+on: 
+  push:
+    branches:
+      - 'main'
+  workflow_dispatch:
 
 jobs:
-- job: InfraDeploy
-  pool:
-    vmImage: macOS-latest
-  steps:
-    - task: AzureCLI@2
-      name: frosti
-      displayName: Run frosti
-      inputs:
-        azureSubscription: '$(ServiceConnection)'
-        scriptType: ps
-        scriptLocation: inlineScript
-        inlineScript: |
-          az --version
-          az account show
-          brew update
-          brew install CirroBuild/tap/frosti
-          $myAppNames = frosti provision -e ppe | grep -E 'WebAppName|FunctionAppName' 
-          $myWebApp = $myAppNames | grep WebAppName | sed -e 's/WebAppName://g'
-          $myFunctionApp = $myAppNames | grep FunctionAppName | sed -e 's/FunctionAppName://g'
-          Write-Host "##vso[task.setvariable variable=webApp;isOutput=true]$myWebApp"
-          Write-Host "##vso[task.setvariable variable=functionApp;isOutput=true]$myFunctionApp"
+  infraProvision:
+    runs-on: macos-latest
+    outputs:
+        WEB_APP_NAME: ${{ steps.run-frosti.outputs.WEB_APP_NAME }}
+        FUNCTION_APP_NAME: ${{ steps.run-frosti.outputs.FUNCTION_APP_NAME }}
+    steps:
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-- job: BuildProject
-  pool:
-    vmImage: macOS-latest
-  steps:
-    - task: DotNetCoreCLI@2
-      displayName: dotnet restore
-      inputs:
-        command: restore
-        projects: __CSPROJNAME__.csproj
-    - task: DotNetCoreCLI@2
-      displayName: dotnet build
-      inputs:
-        command: build
-        projects: __CSPROJNAME__.csproj
-        arguments: -c $(buildConfiguration)
-    - task: DotNetCoreCLI@2
-      displayName: dotnet publish
-      inputs:
-        command: publish
-        publishWebProjects: false
-        projects: __CSPROJNAME__.csproj
-        arguments: -c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)/publish
-    - task: PublishBuildArtifacts@1
-      displayName: 'Publish Artifact: __CSPROJNAME__'
-      inputs:
-        PathtoPublish: $(Build.ArtifactStagingDirectory)/publish
-        ArtifactName: __CSPROJNAME__
+      - name: Set up Homebrew
+        id: set-up-homebrew
+        uses: Homebrew/actions/setup-homebrew@master
 
-- job: CodeDeploy
-  dependsOn: 
-  - InfraDeploy
-  - BuildProject
-  variables:
-    myWebAppName: $[ dependencies.InfraDeploy.outputs['frosti.webApp'] ] 
-    myFunctionAppName: $[ dependencies.InfraDeploy.outputs['frosti.functionApp'] ] 
-  pool:
-    vmImage: macOS-latest
-  steps:
-    - task: DownloadBuildArtifacts@1
-      inputs:
-        buildType: 'current'
-        downloadType: 'single'
-        artifactName: '__CSPROJNAME__'
-        downloadPath: '$(System.DefaultWorkingDirectory)'
-    - task: AzureRmWebAppDeployment@4
-      condition: ne(variables.myWebAppName, '')
-      inputs:
-        ConnectionType: 'AzureRM'
-        azureSubscription: '$(ServiceConnection)'
-        appType: 'webAppLinux'
-        WebAppName: '$(myWebAppName)'
-        packageForLinux: '$(System.DefaultWorkingDirectory)/**/*.zip'
-    - task: AzureFunctionApp@1
-      condition: ne(variables.myFunctionAppName, '')
-      inputs:
-        azureSubscription: '$(ServiceConnection)'
-        appType: 'functionAppLinux'
-        appName: '$(myFunctionAppName)'
-        package: '$(System.DefaultWorkingDirectory)/**/*.zip'
+      - name: Check out repository code
+        uses: actions/checkout@v3
+
+      - name: Run Frosti
+        id: run-frosti
+        run: |
+            az --version
+            az account show
+            brew update
+            brew install CirroBuild/tap/frosti
+            myAppNames=`frosti provision -e ppe | grep -E 'WebAppName|FunctionAppName'`
+            echo $myAppNames
+            myWebApp=`echo $myAppNames | grep WebAppName | sed -e 's/WebAppName://g'`
+            myFunctionApp=`echo $myAppNames | grep FunctionAppName | sed -e 's/FunctionAppName://g'`
+            echo "WEB_APP_NAME=$myWebApp" >> $GITHUB_OUTPUT
+            echo "FUNCTION_APP_NAME=$myFunctionApp" >> $GITHUB_OUTPUT
+            
+      - name: Display
+        run: echo "${{ steps.run-frosti.outputs.FUNCTION_APP_NAME }}"
+            
+  buildProject:
+    runs-on: macos-latest
+    needs: [infraProvision]
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup .NET Core SDK
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: | 
+            6.0.x
+            7.0.x
+            
+      - name: TESTTESTSETEST
+        run: echo ${{ needs.infraProvision.outputs.FUNCTION_APP_NAME }}
+        
+      - name: Install dependencies
+        run: dotnet restore
+      
+      - name: Build
+        run: dotnet build __CSPROJNAME__.csproj --configuration Release --no-restore
+      
+      - name: Test
+        run: dotnet test __CSPROJNAME__.csproj --no-restore --verbosity normal
+        
+      - name: Publish
+        run: dotnet publish __CSPROJNAME__.csproj -c Release --output ./release
+      
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          
+      - name: Azure Web Deploy
+        if: needs.infraProvision.outputs.WEB_APP_NAME != null && needs.infraProvision.outputs.WEB_APP_NAME != ''
+        uses: azure/webapps-deploy@v2
+        with: 
+          app-name: ${{ needs.infraProvision.outputs.WEB_APP_NAME }}
+          package: ./release
+          
+      - name: Azure Function Deploy
+        if: needs.infraProvision.outputs.FUNCTION_APP_NAME != null && needs.infraProvision.outputs.FUNCTION_APP_NAME != ''
+        uses: Azure/functions-action@v1
+        with:
+          app-name: ${{ needs.infraProvision.outputs.FUNCTION_APP_NAME }}
+          package: ./release
+      
+      - name: logout
+        run: |
+          az logout 
