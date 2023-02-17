@@ -3,7 +3,9 @@
 Frosti/Properties/
 Frosti/bin/
 Frosti/obj/
-Frosti/intel/
-Frosti/arm64/
+Frosti/mac_x64/
+Frosti/mac_arm64/
+Frosti/linux_arm64/
+Frosti/linux_x64/
 Frosti/win*
 Frosti-v*

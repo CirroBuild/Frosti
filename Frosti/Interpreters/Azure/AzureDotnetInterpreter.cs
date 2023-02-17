@@ -85,7 +85,7 @@ public static class AzureDotnetInterpreter
 
         configs.Add("\"__SERVICES__\"", "[\"" + string.Join("\",\"", services) + "\"]");
 
-        Console.WriteLine("Completed Interpretting");
+        Console.WriteLine($"Completed Interpretting Project {csprojName}");
 
         return csprojName;
     }

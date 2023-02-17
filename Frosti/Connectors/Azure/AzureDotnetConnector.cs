@@ -29,11 +29,9 @@ namespace Frosti.Connectors;
                 "appsettings.frosti.json"
             });
         }
-        if (File.Exists(frostiAppSettingsFile) == false)
-        {
-            var kvUrl = $"https://{configs["__KEYVAULTNAME__"]}.vault.azure.net/";
-            File.WriteAllLines(frostiAppSettingsFile, new string[] { "{", $"\t\"KV_Endpoint\": \"{kvUrl}\"", "}" });
-        }
+
+        var kvUrl = $"https://{configs["__KEYVAULTNAME__"]}.vault.azure.net/";
+        File.WriteAllLines(frostiAppSettingsFile, new string[] { "{", $"\t\"KV_Endpoint\": \"{kvUrl}\"", "}" });
 
         var pipelineFile = $"Frosti.Data.Azure.pipeline.frosti.yml";
         var assembly = Assembly.GetExecutingAssembly();
