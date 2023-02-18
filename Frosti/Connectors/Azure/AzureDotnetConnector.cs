@@ -21,6 +21,7 @@ namespace Frosti.Connectors;
         var gitIgnoreFile = appsettingFile.Replace(appSettingsPrefix, ".gitignore");
         var frostiAppSettingsFile = appsettingFile.Replace(appSettingsPrefix, "appsettings.frosti.json");
         var frostiYmlFile = appsettingFile.Replace(appSettingsPrefix, ".github/workflows/frosti.yml");
+        Directory.CreateDirectory(".github/workflows/");
 
         if (File.Exists(frostiAppSettingsFile) == false)
         {
@@ -39,7 +40,8 @@ namespace Frosti.Connectors;
 
         var pipeline = await pipelineStrean.ReadToEndAsync();
         pipeline = pipeline.Replace("__CSPROJNAME__", configs["__CSPROJNAME__"]);
-        await File.WriteAllTextAsync(frostiYmlFile, pipeline);
+        pipeline = pipeline.Replace("__SUBSCRIPTION_ID__", configs["__SUBSCRIPTION_ID__"]);
+        await File.WriteAllTextAsync(".github/workflows/frosti.yml", pipeline);
 
         /*
         var programFile = System.IO.Directory.GetFiles(Environment.CurrentDirectory, "Program.cs", SearchOption.AllDirectories).FirstOrDefault();

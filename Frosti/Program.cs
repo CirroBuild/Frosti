@@ -34,14 +34,18 @@ public class Parser
             return 1;
         }
 
-        var aiConfig = TelemetryConfiguration.CreateDefault();
-        aiConfig.InstrumentationKey = "4471d06d-aa90-438a-a969-3cb424e24168"; //test with config.connectionString at some point to get in front of instrumentKey deprecation
-
-        var telemetry = new TelemetryClient(aiConfig);
-        telemetry.TrackTrace($"Running frosti provision from: {Dns.GetHostName()}");
-        telemetry.Flush();
-
         var flags = CommandLine.Parser.Default.ParseArguments<ArgumentFlags>(args);
+        var optOut = flags.Value.OptOut;
+
+        if (optOut == false)
+        {
+            var aiConfig = TelemetryConfiguration.CreateDefault();
+            aiConfig.InstrumentationKey = "4471d06d-aa90-438a-a969-3cb424e24168"; //test with config.connectionString at some point to get in front of instrumentKey deprecation
+
+            var telemetry = new TelemetryClient(aiConfig);
+            telemetry.TrackTrace($"Running frosti provision from: {Dns.GetHostName()}");
+            telemetry.Flush();
+        }
 
         var cloud = Clouds.Azure; //flags.Value.Cloud.ToLower();
         var projectName = flags.Value.ProjectName;

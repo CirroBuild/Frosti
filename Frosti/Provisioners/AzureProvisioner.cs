@@ -18,7 +18,7 @@ public static class AzureProvisioner
         SubscriptionResource? subscription;
         var client = new ArmClient(credential);
         //var email = client.name
-        if (subId == null)
+        if (string.IsNullOrEmpty(subId))
         {
             subscription = await client.GetDefaultSubscriptionAsync();
         }
@@ -39,6 +39,8 @@ public static class AzureProvisioner
                 }
             }
         }
+
+        configs.Add("__SUBSCRIPTION_ID__", subscription.Data.SubscriptionId);
 
         Console.WriteLine($"Using subscription: {subscription.Data.SubscriptionId}");
         List<string> ignoreServices = new() { AzureServices.DevUser, AzureServices.ManagedIdentity, AzureServices.KeyVault };

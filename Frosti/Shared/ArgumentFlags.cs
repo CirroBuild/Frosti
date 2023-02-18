@@ -16,6 +16,9 @@ public class ArgumentFlags
     [Option('e', "environment", HelpText = "The environment to setup the infrastructure. One of 'dev', 'ppe', or 'prod'. See docs: {insert doc link}", Default = Environments.Dev)]
     public string Enviornment { get; set; } = Environments.Dev;
 
+    [Option('o', "optOut", HelpText = "Specfiy --o to opt out of frosti usage tracking")]
+    public bool OptOut { get; set; } = false;
+
     //[Option('l', "location", HelpText = "The primary region for the resources. Please see doc {insert doc link}", Default = Locations.NorthAmerica)]
     //public string Location { get; set; } = Locations.NorthAmerica;
 

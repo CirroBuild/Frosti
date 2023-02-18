@@ -32,7 +32,7 @@ jobs:
             az account show
             brew update
             brew install CirroBuild/tap/frosti
-            myAppNames=`frosti provision -e ppe | grep -E 'WebAppName|FunctionAppName'`
+            myAppNames=`frosti provision -s __SUBSCRIPTION_ID__ -e ppe | grep -E 'WebAppName|FunctionAppName'`
             echo $myAppNames
             myWebApp=`echo $myAppNames | grep WebAppName | sed -e 's/WebAppName://g'`
             myFunctionApp=`echo $myAppNames | grep FunctionAppName | sed -e 's/FunctionAppName://g'`
@@ -54,9 +54,6 @@ jobs:
           dotnet-version: | 
             6.0.x
             7.0.x
-            
-      - name: TESTTESTSETEST
-        run: echo ${{ needs.infraProvision.outputs.FUNCTION_APP_NAME }}
         
       - name: Install dependencies
         run: dotnet restore
