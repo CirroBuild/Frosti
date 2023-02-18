@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  infraProvision:
+  InfraProvision:
     runs-on: macos-latest
     outputs:
         WEB_APP_NAME: ${{ steps.run-frosti.outputs.WEB_APP_NAME }}
@@ -42,7 +42,7 @@ jobs:
       - name: Display
         run: echo "${{ steps.run-frosti.outputs.FUNCTION_APP_NAME }}"
             
-  buildProject:
+  BuildProject:
     runs-on: macos-latest
     needs: [infraProvision]
     steps:
