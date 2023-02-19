@@ -36,6 +36,13 @@ public static class Environments
     public static readonly List<string> Supported = new() { Dev, PPE, Prod };
 }
 
+public static class RunOnOpts
+{
+    public const string Github = "github";
+    public const string DevOps = "devops";
+    public const string Local = "local";
+}
+
 public static class Locations
 {
     public const string NorthAmerica = "northamerica";

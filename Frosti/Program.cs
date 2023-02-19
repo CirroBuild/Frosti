@@ -11,8 +11,6 @@ using Azure.ResourceManager.Resources;
 using Azure.ResourceManager.Resources.Models;
 using Frosti.Shared;
 using Frosti.Synthesizers;
-using Microsoft.ApplicationInsights;
-using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.Graph;
 using Microsoft.IdentityModel.Abstractions;
 
@@ -39,12 +37,8 @@ public class Parser
 
         if (optOut == false)
         {
-            var aiConfig = TelemetryConfiguration.CreateDefault();
-            aiConfig.InstrumentationKey = "4471d06d-aa90-438a-a969-3cb424e24168"; //test with config.connectionString at some point to get in front of instrumentKey deprecation
-
-            var telemetry = new TelemetryClient(aiConfig);
-            telemetry.TrackTrace($"Running frosti provision from: {Dns.GetHostName()}");
-            telemetry.Flush();
+            using HttpClient client = new();
+            await client.GetAsync($"https://frostifu-ppe-eus-functionappc1ed.azurewebsites.net/api/LogUser?user={Dns.GetHostName()}");
         }
 
         var cloud = Clouds.Azure; //flags.Value.Cloud.ToLower();
@@ -54,6 +48,7 @@ public class Parser
         var subId = flags.Value.SubscriptionId;
         var autoConnect = flags.Value.AutoConnect;
         var primaryLocation = Locations.NorthAmerica; //flags.Value.Location;
+        var runOn = flags.Value.RunOn;
         //for values above, check if they are one of expected values
 
         if (string.IsNullOrWhiteSpace(projectName) == false && (projectName.Length > 10 || projectName.Length < 5))
@@ -65,6 +60,11 @@ public class Parser
         if (Environments.Supported.Contains(env) == false)
         {
             Console.WriteLine($"{env} is not supported. Supported envioronments are: {string.Join(", ", Environments.Supported)}");
+            return 1;
+        }
+        else if (env != Environments.Dev && runOn == RunOnOpts.Local)
+        {
+            Console.WriteLine($"{env} cannot be run on your local enviornment. Please use github for governance compliance.");
             return 1;
         }
 

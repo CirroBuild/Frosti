@@ -21,7 +21,6 @@
     <None Remove="Models\Azure\" />
     <None Remove="Data\Azure\" />
     <None Remove="Data\Azure\dev\" />
-    <None Remove="Data\Azure\prod\" />
     <None Remove="intel\**" />
     <None Remove="arm64\**" />
     <None Remove="brew.sh" />
@@ -36,7 +35,6 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     <PackageReference Include="Microsoft.Graph" Version="4.48.0" />
     <PackageReference Include="CommandLineParser" Version="2.9.1" />
-    <PackageReference Include="Microsoft.ApplicationInsights" Version="2.21.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="7.0.0" />
   </ItemGroup>
@@ -45,7 +43,6 @@
     <Folder Include="Models\Azure\" />
     <Folder Include="Data\Azure\" />
     <Folder Include="Data\Azure\dev\" />
-    <Folder Include="Data\Azure\prod\" />
     <Folder Include="Interpreters\" />
     <Folder Include="Interpreters\Azure\" />
     <Folder Include="Connectors\Azure\" />

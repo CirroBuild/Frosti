@@ -19,6 +19,9 @@ public class ArgumentFlags
     [Option('o', "optOut", HelpText = "Specfiy --o to opt out of frosti usage tracking")]
     public bool OptOut { get; set; } = false;
 
+    [Option('r', "runOn", HelpText = "Used to identify where frosti is run from")]
+    public string RunOn { get; set; } = RunOnOpts.Local;
+
     //[Option('l', "location", HelpText = "The primary region for the resources. Please see doc {insert doc link}", Default = Locations.NorthAmerica)]
     //public string Location { get; set; } = Locations.NorthAmerica;
 

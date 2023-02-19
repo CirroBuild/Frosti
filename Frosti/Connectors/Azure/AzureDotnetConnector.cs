@@ -44,11 +44,18 @@ namespace Frosti.Connectors;
                 var json = r.ReadToEnd();
                 var jobj = JObject.Parse(json);
                 var vals = jobj["Values"] as JObject;
-                vals.Add(new JProperty("KV_Endpoint", kvUrl));
-                result = jobj.ToString();
+                if (vals.ContainsKey("KV_Endpoint") == false)
+                {
+                    vals.Add(new JProperty("KV_Endpoint", kvUrl));
+                    result = jobj.ToString();
+                    File.WriteAllText(appsettingFile, result);
+                }
             }
-            File.WriteAllText(appsettingFile, result);
         }
+
+        var frostiDelta = appsettingFile.Replace(appSettingsPrefix, "frosti.delta");
+        File.WriteAllText(frostiDelta, string.Join(", ", services));
+
 
         Directory.CreateDirectory(".github/workflows/");
         var pipelineFile = $"Frosti.Data.Azure.pipeline.frosti.yml";
