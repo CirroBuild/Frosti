@@ -7,7 +7,7 @@ using Frosti.Provisioners;
 namespace Frosti.Synthesizers;
 public static class AzureDotNet
 {
-    public static async Task<int> Synthesize(string projectName, string env, string? subId, bool autoConnect, string primaryLocation)
+    public static async Task<int> Synthesize(string projectName, string env, string? subId, bool autoConnect, string primaryLocation, bool beta)
     {
         var services = new HashSet<string>() { AzureServices.ManagedIdentity, AzureServices.KeyVault };
         var configs = new Dictionary<string, string>();
@@ -21,7 +21,7 @@ public static class AzureDotNet
         {
             if (env == Environments.Dev)
             {
-                await AzureDotnetConnector.Connect(configs, services);
+                await AzureDotnetConnector.Connect(configs, services, credential, beta);
             }
         }
 

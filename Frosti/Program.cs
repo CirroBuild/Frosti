@@ -49,6 +49,7 @@ public class Parser
         var autoConnect = flags.Value.AutoConnect;
         var primaryLocation = Locations.NorthAmerica; //flags.Value.Location;
         var runOn = flags.Value.RunOn;
+        var beta = flags.Value.Beta;
         //for values above, check if they are one of expected values
 
         if (string.IsNullOrWhiteSpace(projectName) == false && (projectName.Length > 10 || projectName.Length < 5))
@@ -86,7 +87,7 @@ public class Parser
                 switch (framework)
                 {
                     case Frameworks.DotNet:
-                        return await AzureDotNet.Synthesize(projectName, env, subId, autoConnect, primaryLocation);
+                        return await AzureDotNet.Synthesize(projectName, env, subId, autoConnect, primaryLocation, beta);
                     default:
                         Console.WriteLine($"{framework} is not yet supported for {Frameworks.AzureSupported}. Supported frameworks are: {string.Join(", ", Frameworks.AzureSupported)}. See doc for more details: link");
                         return 1;

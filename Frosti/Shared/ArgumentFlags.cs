@@ -22,6 +22,9 @@ public class ArgumentFlags
     [Option('r', "runOn", HelpText = "Used to identify where frosti is run from")]
     public string RunOn { get; set; } = RunOnOpts.Local;
 
+    [Option('b', "beta", HelpText = "Use to setup PPE env for Beta")]
+    public bool Beta { get; set; } = false;
+
     //[Option('l', "location", HelpText = "The primary region for the resources. Please see doc {insert doc link}", Default = Locations.NorthAmerica)]
     //public string Location { get; set; } = Locations.NorthAmerica;
 
