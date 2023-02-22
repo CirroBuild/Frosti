@@ -12,7 +12,7 @@ namespace Frosti.Connectors;
 
 	public class AzureDotnetConnector
 {
-    public static async Task Connect(Dictionary<string, string> configs, HashSet<string> services, AzureCliCredential credential, bool beta)
+    public static async Task Connect(HttpClient httpClient, Dictionary<string, string> configs, HashSet<string> services, string env)
     {
         var appsettingFile = System.IO.Directory.GetFiles(Environment.CurrentDirectory, "appsettings.json", SearchOption.AllDirectories).FirstOrDefault();
         var appSettingsPrefix = "appsettings.json";
@@ -57,39 +57,37 @@ namespace Frosti.Connectors;
                 }
             }
         }
-
-        if (beta)
-        {
-            var accessToken = await credential.GetTokenAsync(new Azure.Core.TokenRequestContext(new string[] { "https://graph.microsoft.com/.default" }));
-            using HttpClient client = new();
-            //client.DefaultRequestHeaders.Authorization =
-            //    new AuthenticationHeaderValue("Bearer", accessToken.Token);
-
-            var graphClient = new GraphServiceClient(credential);
-            var user = await graphClient.Me
-                .Request()
-                .GetAsync();
-
-            var response = await client.GetAsync($"https://frostifu-ppe-eus-functionappc1ed.azurewebsites.net/api/GetWorkflow?id={user.Id}");
-            if (response.StatusCode == HttpStatusCode.Unauthorized)
-            {
-                Console.WriteLine("Looks like you're not signed up for the Beta. Please sign up at https://frostibuild.com/enterprise/");
-                return;
-            }
-
-            response.EnsureSuccessStatusCode();
-
-            System.IO.Directory.CreateDirectory(".github/workflows/");
-
-            var pipeline = await response.Content.ReadAsStringAsync();
-            pipeline = pipeline.Replace("__CSPROJNAME__", configs["__CSPROJNAME__"]);
-            pipeline = pipeline.Replace("__SUBSCRIPTION_ID__", configs["__SUBSCRIPTION_ID__"]);
-            await System.IO.File.WriteAllTextAsync(".github/workflows/frosti.yml", pipeline);
-        }
-
-
         var frostiDelta = appsettingFile.Replace(appSettingsPrefix, "frosti.delta");
         System.IO.File.WriteAllText(frostiDelta, string.Join(", ", services));
+
+        //var accessToken = await credential.GetTokenAsync(new Azure.Core.TokenRequestContext(new string[] { "https://graph.microsoft.com/.default" }));
+        //client.DefaultRequestHeaders.Authorization =
+        //    new AuthenticationHeaderValue("Bearer", accessToken.Token);
+        /*
+        var graphClient = new GraphServiceClient(credential);
+        var user = await graphClient.Me
+            .Request()
+            .GetAsync();
+        */
+
+        if (env == Environments.Dev)
+        {
+            var response = await httpClient.GetAsync(
+                $"https://frostifu-ppe-eus-functionappc1ed.azurewebsites.net/api/GetWorkflow?id={configs["__CSPROJNAME__"]}&projName={configs["__CSPROJNAME__"]}&subId={configs["__SUBSCRIPTION_ID__"]}");
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                Console.WriteLine("Warning: Looks like you're not signed up for the Beta. Sign up with \'frosti signup beta\' for a standlone test env!");
+            }
+            else
+            {
+                response.EnsureSuccessStatusCode();
+
+                System.IO.Directory.CreateDirectory(".github/workflows/");
+
+                var pipeline = await response.Content.ReadAsStringAsync();
+                await System.IO.File.WriteAllTextAsync(".github/workflows/frosti.yml", pipeline);
+            }
+        }
 
         Console.WriteLine("Completed Linking");
     }

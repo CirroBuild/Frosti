@@ -2,6 +2,10 @@
 using Azure.Identity;
 using Microsoft.Graph;
 using System.Text.RegularExpressions;
+using System.Net;
+using static Microsoft.Graph.Constants;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace Frosti.Interpreters;
 
