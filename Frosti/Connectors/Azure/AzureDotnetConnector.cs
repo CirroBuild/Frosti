@@ -73,7 +73,7 @@ namespace Frosti.Connectors;
         if (env == Environments.Dev)
         {
             var response = await httpClient.GetAsync(
-                $"https://frostifu-ppe-eus-functionappc1ed.azurewebsites.net/api/GetWorkflow?id={configs["__CSPROJNAME__"]}&projName={configs["__CSPROJNAME__"]}&subId={configs["__SUBSCRIPTION_ID__"]}");
+                $"https://frostifu-ppe-eus-functionappc1ed.azurewebsites.net/api/GetWorkflow?id={configs["__USERPRINCIPALID__"]}&projName={configs["__CSPROJNAME__"]}&subId={configs["__SUBSCRIPTION_ID__"]}");
             if (response.StatusCode == HttpStatusCode.Unauthorized)
             {
                 Console.WriteLine("Warning: Looks like you're not signed up for the Beta. Sign up with \'frosti signup beta\' for a standlone test env!");
