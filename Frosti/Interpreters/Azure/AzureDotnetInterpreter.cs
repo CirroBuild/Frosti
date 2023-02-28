@@ -69,7 +69,8 @@ public static class AzureDotnetInterpreter
 
             if (user != null)
             {
-                configs.Add("USERNAME", string.IsNullOrEmpty(user.Surname) ? user.Id : user.Surname);
+                configs.Add("__USERNAME__", string.IsNullOrEmpty(user.Surname) ? user.Id : user.Surname);
+                configs.Add("__UPN__", user.UserPrincipalName);
                 configs.Add("__USERPRINCIPALID__", user.Id);
                 services.Add(AzureServices.DevUser);
             }

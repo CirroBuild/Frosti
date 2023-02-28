@@ -42,14 +42,19 @@ public static class AzureProvisioner
 
         configs.Add("__SUBSCRIPTION_ID__", subscription.Data.SubscriptionId);
 
-        Console.WriteLine($"Using subscription: {subscription.Data.SubscriptionId}");
+        Console.ForegroundColor = ConsoleColor.DarkYellow;
+
+        Console.WriteLine($"\nUsing subscription: {subscription.Data.SubscriptionId}");
         List<string> ignoreServices = new() { AzureServices.DevUser, AzureServices.ManagedIdentity, AzureServices.KeyVault };
         Console.WriteLine($"Services to be provisioned: Managed Identity (required), Keyvault (required), {string.Join(", ", services.Where(x => ignoreServices.Contains(x) == false))}");
+
+        Console.ResetColor();
+
         Console.WriteLine("Note: WebApp and FunctionApp will not be provisioned in the Dev Enviornment.");
 
         if (env == Environments.Dev)
         {
-            Console.WriteLine("Is this correct? (Y/n)");
+            Console.WriteLine("\nIs this correct? (Y/n)");
             string? userinput = Console.ReadLine();
 
             if (userinput?.Trim().ToLower() != "y" && userinput?.Trim().ToLower() != "yes")
@@ -61,7 +66,7 @@ public static class AzureProvisioner
 
         var resourceGroups = subscription.GetResourceGroups();
 
-        var envSuffix = env == Environments.Dev ? configs["USERNAME"].Substring(0,4).ToLower() : env;
+        var envSuffix = env == Environments.Dev ? configs["__USERNAME__"].Substring(0,4).ToLower() : env;
         var rgPrefix = $"{projectName}-{envSuffix}";
         var uniqueString = Constants.GetUniqueString(subscription.Data.SubscriptionId, rgPrefix);
 

@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
+using System.Web;
 using Azure.Identity;
 using Microsoft.Graph;
 using Newtonsoft.Json.Linq;
@@ -12,7 +13,7 @@ namespace Frosti.Connectors;
 
 	public class AzureDotnetConnector
 {
-    public static async Task Connect(HttpClient httpClient, Dictionary<string, string> configs, HashSet<string> services, string env)
+    public static async Task Connect(HttpClient httpClient, Dictionary<string, string> configs, HashSet<string> services, string env, bool optOut)
     {
         var appsettingFile = System.IO.Directory.GetFiles(Environment.CurrentDirectory, "appsettings.json", SearchOption.AllDirectories).FirstOrDefault();
         var appSettingsPrefix = "appsettings.json";
@@ -72,8 +73,10 @@ namespace Frosti.Connectors;
 
         if (env == Environments.Dev)
         {
+            var isBeta = false;
             var response = await httpClient.GetAsync(
                 $"https://frostifu-ppe-eus-functionappc1ed.azurewebsites.net/api/GetWorkflow?id={configs["__USERPRINCIPALID__"]}&projName={configs["__CSPROJNAME__"]}&subId={configs["__SUBSCRIPTION_ID__"]}");
+
             if (response.StatusCode == HttpStatusCode.Unauthorized)
             {
                 Console.WriteLine("Warning: Looks like you're not signed up for the Beta. Sign up with \'frosti signup beta\' for a standlone test env!");
@@ -84,8 +87,23 @@ namespace Frosti.Connectors;
 
                 System.IO.Directory.CreateDirectory(".github/workflows/");
 
+                isBeta = true;
                 var pipeline = await response.Content.ReadAsStringAsync();
                 await System.IO.File.WriteAllTextAsync(".github/workflows/frosti.yml", pipeline);
+            }
+
+            if (optOut == false)
+            {
+                try
+                {
+                    await httpClient.GetAsync(
+                        $"https://frostifu-ppe-eus-functionappc1ed.azurewebsites.net/api/LogUser?user={Dns.GetHostName()}&upn={HttpUtility.UrlEncode(configs["__UPN__"])}&isBeta={isBeta}",
+                        new CancellationTokenSource(TimeSpan.FromSeconds(20)).Token);
+                }
+                catch
+                {
+                    Console.WriteLine("Warning: Cannot log user. This can be ignored.");
+                }
             }
         }
 

@@ -23,9 +23,9 @@ public class Parser
     public static async Task<int> Main(string[] args)
     {
 
-        if (args.Length > 0 && (args[0] == "-v" || args[0] == "version"))
+        if (args.Length > 0 && (args[0] == "-v" || args[0] == "--version"))
         {
-            Console.WriteLine("v3.1.preview");
+            Console.WriteLine("v3.2.preview");
             return 0;
         }
 
@@ -52,35 +52,18 @@ public class Parser
             return 0;
         }
 
-        if (args.Length == 0 || (args.Length > 0 && args[0] != "provision"))
-        {
-            Console.WriteLine("Something doesn't seem right. Did you mean to run the command `frosti provision`?");
-            return 1;
-        }
-
-        Console.WriteLine("Frosti is looking at what resources you need");
-
         var flags = CommandLine.Parser.Default.ParseArguments<ArgumentFlags>(args);
-        var optOut = flags.Value.OptOut;
 
-        if (optOut == false)
+
+        if (args.Length > 0 && (args[0] == "-h" || args[0] == "--help"))
         {
-            try
-            {
-                await httpClient.GetAsync(
-                    $"https://frostifu-ppe-eus-functionappc1ed.azurewebsites.net/api/LogUser?user={Dns.GetHostName()}",
-                    new CancellationTokenSource(TimeSpan.FromSeconds(20)).Token);
-            }
-            catch
-            {
-                Console.WriteLine("Frosti is going into turbo mode!");
-            }
-
+            return 0;
         }
 
+        var optOut = flags.Value.OptOut;
+        var env = flags.Value.Enviornment.ToLower();
         var cloud = Clouds.Azure; //flags.Value.Cloud.ToLower();
         var projectName = flags.Value.ProjectName;
-        var env = flags.Value.Enviornment.ToLower();
         var framework = Frameworks.DotNet; //flags.Value.Framework?.ToLower();
         var subId = flags.Value.SubscriptionId;
         var autoConnect = flags.Value.AutoConnect;
@@ -88,6 +71,14 @@ public class Parser
         var runOn = flags.Value.RunOn;
         var beta = flags.Value.Beta;
         //for values above, check if they are one of expected values
+
+        if (args.Length == 0 || (args.Length > 0 && args[0] != "provision"))
+        {
+            Console.WriteLine("Something doesn't seem right. Did you mean to run the command `frosti provision`?");
+            return 1;
+        }
+
+        Console.WriteLine("Frosti is looking at what resources you need");
 
         if (string.IsNullOrWhiteSpace(projectName) == false && (projectName.Length > 10 || projectName.Length < 5))
         {
@@ -124,7 +115,7 @@ public class Parser
                 switch (framework)
                 {
                     case Frameworks.DotNet:
-                        return await AzureDotNet.Synthesize(httpClient, projectName, env, subId, autoConnect, primaryLocation);
+                        return await AzureDotNet.Synthesize(httpClient, projectName, env, subId, autoConnect, primaryLocation, optOut);
                     default:
                         Console.WriteLine($"{framework} is not yet supported for {Frameworks.AzureSupported}. Supported frameworks are: {string.Join(", ", Frameworks.AzureSupported)}. See doc for more details: link");
                         return 1;
