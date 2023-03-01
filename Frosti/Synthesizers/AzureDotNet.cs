@@ -15,6 +15,7 @@ public static class AzureDotNet
 
         try
         {
+            configs.Add("__CUSTOM_NAME__", projectName);
             var csProjName = await AzureDotnetInterpreter.Interpret(env, credential, configs, services);
             projectName = string.IsNullOrEmpty(projectName) ? csProjName.Substring(0, 8) : projectName;
         }

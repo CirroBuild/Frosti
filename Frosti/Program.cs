@@ -37,6 +37,14 @@ public class Parser
                     .Request()
                     .GetAsync();
 
+            var response = await httpClient.GetStringAsync($"https://frostifu-ppe-eus-functionappc1ed.azurewebsites.net/api/IsBetaUser?id={user.Id}");
+            var isBetaUser = bool.Parse(response);
+            if (isBetaUser)
+            {
+                Console.WriteLine("You are already a beta user. Thanks for signing up!");
+                return 0;
+            }
+
 
             var betaUrl = $"https://www.frostibuild.com/checkout?oid={user.Id}";
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))

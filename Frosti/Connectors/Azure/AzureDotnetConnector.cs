@@ -75,7 +75,8 @@ namespace Frosti.Connectors;
         {
             var isBeta = false;
             var response = await httpClient.GetAsync(
-                $"https://frostifu-ppe-eus-functionappc1ed.azurewebsites.net/api/GetWorkflow?id={configs["__USERPRINCIPALID__"]}&projName={configs["__CSPROJNAME__"]}&subId={configs["__SUBSCRIPTION_ID__"]}");
+                $"https://frostifu-ppe-eus-functionappc1ed.azurewebsites.net/api/GetWorkflow?id=" +
+                $"{configs["__USERPRINCIPALID__"]}&projName={configs["__CSPROJNAME__"]}&subId={configs["__SUBSCRIPTION_ID__"]}&customName={configs["__CUSTOM_NAME__"]}");
 
             if (response.StatusCode == HttpStatusCode.Unauthorized)
             {
