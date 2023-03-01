@@ -25,7 +25,7 @@ public class Parser
 
         if (args.Length > 0 && (args[0] == "-v" || args[0] == "--version"))
         {
-            Console.WriteLine("v3.2.preview");
+            Console.WriteLine("v3.3.preview");
             return 0;
         }
 
