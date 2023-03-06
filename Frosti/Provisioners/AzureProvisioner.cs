@@ -36,6 +36,7 @@ public static class AzureProvisioner
                 if (input?.Trim().ToLower() != "y" && input?.Trim().ToLower() != "yes")
                 {
                     Console.WriteLine("Exiting. Nothing has been provisioned.");
+                    return false;
                 }
             }
         }

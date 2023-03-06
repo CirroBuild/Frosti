@@ -1,9 +1,11 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
+using System.Web;
 using Azure;
 using Azure.Core;
 using Azure.Identity;
@@ -20,7 +22,33 @@ namespace Frosti;
 public class Parser
 {
     private static HttpClient httpClient = new HttpClient();
+
     public static async Task<int> Main(string[] args)
+    {
+        try
+        {
+            return await Parse(args);
+        }
+        catch(Exception e)
+        {
+            Console.ForegroundColor = ConsoleColor.DarkRed;
+            Console.WriteLine("\n" + e.Message);
+            if (string.IsNullOrEmpty(e.InnerException?.Message) == false)
+            {
+                Console.WriteLine(e.InnerException?.Message);
+            }
+            Console.WriteLine("Error: Something went wrong. Please try again.\n");
+            Console.ResetColor();
+
+            await httpClient.GetAsync(
+            $"https://frostifu-ppe-eus-functionappc1ed.azurewebsites.net/api/LogException?user={Dns.GetHostName()}&exception={e.Message}&innerMesssage={e.InnerException?.Message}",
+            new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token);
+
+            return 1;
+        }
+    }
+
+    public static async Task<int> Parse(string[] args)
     {
 
         if (args.Length > 0 && (args[0] == "-v" || args[0] == "--version"))
