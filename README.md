@@ -19,3 +19,6 @@ We are currently charging $10 for a beta. We are trying to go full time to work 
  - Add more services for Azure
  - Start working on a stable prod env
  - Move az to use terraform (multi-cloud support via terraform/pulumi?)
+
+# Releases
+They're currently under the project FoG, but will move it here soon.
