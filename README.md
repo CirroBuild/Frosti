@@ -1,5 +1,5 @@
 # Introduction 
-Frosti's goal is to enable devs to abstract the step of infrastructure provisioning entirely and simply write their applicaiton code. Our infrastructure interpreter scans the applicaiton and automatically provisions the optimal infrastructure for each enviornment. Think of us as Python or Java as compared to C. For a lot of solutions, the simplicity of the language outweighs the performance hit.
+Frosti's goal is to enable devs to abstract the step of infrastructure provisioning entirely and simply write their application code. Our infrastructure interpreter scans the application and automatically provisions the optimal infrastructure for each enviornment. Think of us as Python or Java as compared to C. For a lot of solutions, the simplicity of the language outweighs the performance hit.
 
 See www.frostibuild.com for more info.
 
