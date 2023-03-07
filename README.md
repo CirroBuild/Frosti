@@ -7,7 +7,7 @@ See www.frostibuild.com for more info.
 Written for dotnet. If you have Visual Studio, this should be as easy as cloning the repo.
 
 # Contributing
-We would love any and all help in furthering the project. We truly believe infrastrucutre can be abstracted away for a lot of cloud solutions.
+We would love any and all help in furthering the project. We truly believe infrastructure can be abstracted away for a lot of cloud solutions.
 
 # Business Thoughts
 We are currently charging $10 for a beta. We are trying to go full time to work on this project, and this is one things investors like to see. We are not sure what part of the project will actually require a paid premium, but our focus is on enterprises only. We want individual developers to have access to the entire project free of charge!
