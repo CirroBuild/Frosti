@@ -378,11 +378,38 @@
         "name": "B_Gen5_1"
       },
       "properties": {
+        "sslEnforcement": "Disabled",
         "createMode": "Default",
-        "version": "10",
+        "version": "11",
         "administratorLogin": "FrostiAdmin",
         "administratorLoginPassword": "[parameters('sqlPassword')]"
       }
+    },
+    {
+      "condition": "[contains(parameters('services'), 'PostgreSQL')]",
+      "type": "Microsoft.DBforPostgreSQL/servers/firewallRules",
+      "apiVersion": "2017-12-01",
+      "name": "[format('{0}/{1}', parameters('postgreSqlServerName'), 'AllowAllWindowsAzureIps')]",
+      "properties": {
+        "endIpAddress": "0.0.0.0",
+        "startIpAddress": "0.0.0.0"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.DBforPostgreSQL/servers', parameters('postgreSqlServerName'))]"
+      ]
+    },
+    {
+      "condition": "[and(contains(parameters('services'), 'PostgreSQL'), contains(parameters('services'), 'DevUser'))]",
+      "type": "Microsoft.DBforPostgreSQL/servers/firewallRules",
+      "apiVersion": "2017-12-01",
+      "name": "[format('{0}/{1}', parameters('postgreSqlServerName'), 'AllowAll')]",
+      "properties": {
+        "endIpAddress": "255.255.255.255",
+        "startIpAddress": "0.0.0.0"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.DBforPostgreSQL/servers', parameters('postgreSqlServerName'))]"
+      ]
     }
   ]
 }
