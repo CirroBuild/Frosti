@@ -5,7 +5,7 @@ using Frosti.Connectors;
 using Frosti.Provisioners;
 
 namespace Frosti.Synthesizers;
-public static class AzureDotNet
+public static class AzureDjango
 {
     public static async Task<int> Synthesize(HttpClient httpClient, string projectName, string env, string? subId, bool autoConnect, string primaryLocation, bool optOut)
     {
@@ -16,8 +16,7 @@ public static class AzureDotNet
         try
         {
             configs.Add("__CUSTOM_NAME__", projectName);
-            var csProjName = await AzureDotnetInterpreter.Interpret(env, credential, configs, services);
-            projectName = string.IsNullOrEmpty(projectName) ? csProjName.Substring(0, 8) : projectName;
+            await AzureDjangoInterpreter.Interpret(env, credential, configs, services);
         }
         catch
         {
@@ -28,7 +27,7 @@ public static class AzureDotNet
         var provisioned = await AzureProvisioner.Provision(projectName, env, subId, credential, configs, services, primaryLocation);
         if (provisioned && env.Equals(Environments.Dev))
         {
-            await AzureDotnetConnector.Connect(httpClient, configs, services, env, optOut);
+            await AzureDjangoConnector.Connect(httpClient, configs, services, env, optOut);
         }
 
         return 0;

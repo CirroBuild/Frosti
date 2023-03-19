@@ -18,6 +18,7 @@ public static class Clouds
 public static class Frameworks
 {
     public const string DotNet = "dotnet";
+    public const string Django = "django";
     public const string Java = "java";
     public const string Python = "python";
     public const string Go = "go";

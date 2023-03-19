@@ -21,6 +21,7 @@ public static class AzureDotnetInterpreter
         if (csprojFiles.Length < 1)
         {
             Console.WriteLine($"No csproj file is found within this project. Please go to the root directory and try again");
+            throw new Exception("Can't find file");
         }
         //Console.WriteLine($"Launched from {Environment.CurrentDirectory}"); // <- find all csproj in current directory and combine them as string
         //Console.WriteLine($"Physical location {AppDomain.CurrentDomain.BaseDirectory}");
@@ -52,7 +53,7 @@ public static class AzureDotnetInterpreter
         }
 
 
-        foreach (var sdkToService in AzureServices.SdkToServices)
+        foreach (var sdkToService in AzureServices.DotnetSdkToServices)
         {
             if (csprojData.Contains(sdkToService.Key))
             {
@@ -92,7 +93,7 @@ public static class AzureDotnetInterpreter
 
         Console.WriteLine($"Completed Interpretting Project {csprojName}");
 
-        return csprojName;
+        return csprojName.Replace(" ", "");
     }
 }
 

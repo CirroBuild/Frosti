@@ -53,7 +53,7 @@ public class Parser
 
         if (args.Length > 0 && (args[0] == "-v" || args[0] == "--version"))
         {
-            Console.WriteLine("v3.3.preview");
+            Console.WriteLine("v3.6.preview");
             return 0;
         }
 
@@ -116,12 +116,6 @@ public class Parser
 
         Console.WriteLine("Frosti is looking at what resources you need");
 
-        if (string.IsNullOrWhiteSpace(projectName) == false && (projectName.Length > 10 || projectName.Length < 5))
-        {
-            Console.WriteLine("The name to prefix the infrastrucutre needs to be between 5-10 character. Please see doc {insert doc link}");
-            return 1;
-        }
-
         if (Environments.Supported.Contains(env) == false)
         {
             Console.WriteLine($"{env} is not supported. Supported envioronments are: {string.Join(", ", Environments.Supported)}");
@@ -145,6 +139,32 @@ public class Parser
             Console.WriteLine($"Setting default framework to use {framework}. To use a different framework, provide it with -f. See doc link");
         }
 
+        if (HasPyFiles())
+        {
+            framework = Frameworks.Django;
+
+            var projNameFile = System.IO.Directory.GetFiles(Environment.CurrentDirectory, ".frosti.projName", SearchOption.AllDirectories).FirstOrDefault();
+
+            if (projNameFile == null)
+            {
+                Console.WriteLine($"What do you want to name the project? (5-10 characters)");
+                string? userinput = Console.ReadLine();
+                projectName = userinput.Replace(" ", "");
+            }
+            else
+            {
+                projectName = System.IO.File.ReadAllText(projNameFile);
+            }
+
+        }
+
+        if (string.IsNullOrWhiteSpace(projectName) == false && (projectName.Length > 10 || projectName.Length < 5))
+        {
+            Console.WriteLine("The name to prefix the infrastrucutre needs to be between 5-10 character. Please see doc {insert doc link}");
+            return 1;
+        }
+
+
         switch (cloud)
         {
             case Clouds.Azure:
@@ -152,6 +172,8 @@ public class Parser
                 {
                     case Frameworks.DotNet:
                         return await AzureDotNet.Synthesize(httpClient, projectName, env, subId, autoConnect, primaryLocation, optOut);
+                    case Frameworks.Django:
+                        return await AzureDjango.Synthesize(httpClient, projectName, env, subId, autoConnect, primaryLocation, optOut);
                     default:
                         Console.WriteLine($"{framework} is not yet supported for {Frameworks.AzureSupported}. Supported frameworks are: {string.Join(", ", Frameworks.AzureSupported)}. See doc for more details: link");
                         return 1;
@@ -181,5 +203,11 @@ public class Parser
                 Console.WriteLine($"{cloud} is not an acceptable value for cloud. Supported clouds are: {string.Join(", ", Clouds.Supported)}");
                 return 1;
         }
+    }
+
+    static bool HasPyFiles()
+    {
+        var pyFiles = System.IO.Directory.GetFiles(Environment.CurrentDirectory, "*.py", SearchOption.AllDirectories);
+        return pyFiles.Count() > 0;
     }
 }

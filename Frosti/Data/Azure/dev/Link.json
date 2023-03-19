@@ -79,6 +79,24 @@
       "properties": {
         "value": "[if(contains(parameters('services'), 'ApplicationInsights'), reference(resourceId(parameters('primaryRegionResourceGroupName'),'Microsoft.Insights/components', parameters('appInsightsName')), '2020-02-02').ConnectionString, 'blank')]"
       }
+    },
+    {
+      "condition": "[contains(parameters('services'), 'PostgreSQL')]",
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2021-11-01-preview",
+      "name": "[format('{0}/{1}', parameters('keyVaultName'), 'PostgreSQLConnection')]",
+      "properties": {
+        "value": "[if(contains(parameters('services'), 'PostgreSQL'), concat('Database=', 'postgres', ';Server=', reference(resourceId(parameters('primaryRegionResourceGroupName'),'Microsoft.DBforPostgreSQL/servers',parameters('postgreSqlServerName')), '2017-12-01').fullyQualifiedDomainName, ';User Id=', 'FrostiAdmin','@', parameters('postgreSqlServerName'),';Password=', parameters('sqlPassword')), 'blank')]"
+      }
+    },
+    {
+      "condition": "[contains(parameters('services'), 'PostgreSQL')]",
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2021-11-01-preview",
+      "name": "[format('{0}/{1}', parameters('keyVaultName'), 'PostgreSQLPythonConnection')]",
+      "properties": {
+        "value": "[if(contains(parameters('services'), 'PostgreSQL'), format('dbname={0} user={1}@{2} host={3} password={4} port=''5432'' sslmode=''true''', 'postgres', 'FrostiAdmin', parameters('postgreSqlServerName'),reference(resourceId(parameters('primaryRegionResourceGroupName'),'Microsoft.DBforPostgreSQL/servers',parameters('postgreSqlServerName')), '2017-12-01').fullyQualifiedDomainName, parameters('sqlPassword')), 'blank')]"
+      }
     }
   ]
 }

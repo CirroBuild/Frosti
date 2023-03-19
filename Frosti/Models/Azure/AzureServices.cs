@@ -22,7 +22,7 @@ public static class AzureServices   //dotnet specific the sdks to service
     public static readonly string ManagedIdentity = "ManagedIdentity";
     public static readonly string DevUser = "DevUser";
 
-    public static readonly Dictionary<string, string> SdkToServices = new()
+    public static readonly Dictionary<string, string> DotnetSdkToServices = new()
     {
         {"<Project Sdk=\"Microsoft.NET.Sdk.Web\">", WebApp},
         {"Microsoft.NET.Sdk.Functions", FunctionApp},
@@ -36,6 +36,17 @@ public static class AzureServices   //dotnet specific the sdks to service
         {"Microsoft.Data.SqlClient", SQL},                        //Managed Instance for premium? https://learn.microsoft.com/en-us/azure/azure-sql/managed-instance/create-template-quickstart?view=azuresql&tabs=azure-powershell
         {"MySql.Data", MySql},                                    //Flexible server for premium? https://learn.microsoft.com/en-us/azure/templates/microsoft.dbformysql/flexibleservers?pivots=deployment-language-arm-template
         {"Npgsql", PostgreSQL}
+        //Figure out MariaDb
+    };
+
+    public static readonly Dictionary<string, string> DjangoSdkToServices = new()
+    {
+        {"azure.functions", FunctionApp},
+        {"storages.backends.azure_storage", Storage},
+        {"azure.keyvault.secrets", KeyVault},
+        {"AzureLogHandler", ApplicationInsights},
+        {"azure.cosmos", Cosmos},
+        {"django.db.backends.postgresql", PostgreSQL}
         //Figure out MariaDb
     };
 };
