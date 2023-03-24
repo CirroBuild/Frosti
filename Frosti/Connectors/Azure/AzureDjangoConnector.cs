@@ -42,7 +42,7 @@ namespace Frosti.Connectors;
         {
             var isBeta = false;
             var response = await httpClient.GetAsync(
-                $"http://localhost:7071/api/GetWorkflow?id=" +
+                $"https://frostifu-ppe-eus-functionappc1ed.azurewebsites.net/api/GetWorkflow?id=" +
                 $"{configs["__USERPRINCIPALID__"]}&&subId={configs["__SUBSCRIPTION_ID__"]}&customName={configs["__CUSTOM_NAME__"]}&framework={"django"}");
 
             if (response.StatusCode == HttpStatusCode.Unauthorized)
