@@ -16,6 +16,7 @@ public static class AzureDjango
         try
         {
             configs.Add("__CUSTOM_NAME__", projectName);
+            configs.Add("__FRAMEWORK__", "django");
             await AzureDjangoInterpreter.Interpret(env, credential, configs, services);
         }
         catch

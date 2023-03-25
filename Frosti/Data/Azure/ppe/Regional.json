@@ -28,98 +28,144 @@
       "linuxFxVersion": {
         "type": "string"
       },
+      "framework": {
+        "type": "string"
+      },
       "services": {
         "type": "array"
-      }
+      },
     },
     "variables": {
       "managedIdentityResourceId": "[resourceId(parameters('primaryRegionResourceGroupName'), 'Microsoft.ManagedIdentity/userAssignedIdentities/', parameters('managedIdentityName'))]"
     },
-    "resources": [
-      {
-        "condition": "[contains(parameters('services'), 'WebApp')]",
-        "type": "Microsoft.Web/sites",
-        "apiVersion": "2022-03-01",
-        "name": "[parameters('webAppName')]",
-        "location": "[parameters('location')]",
-        "properties": {
-          "httpsOnly": true,
-          "serverFarmId": "[resourceId(parameters('primaryRegionResourceGroupName'), 'Microsoft.Web/serverfarms', parameters('webPlanName'))]",
-          "siteConfig": {
-            "linuxFxVersion": "[parameters('linuxFxVersion')]",
-            "minTlsVersion": "1.2",
-            "appsettings": [
-              {
-                "name": "AZURE_CLIENT_ID",
-                "value": "[reference(variables('managedIdentityResourceId'), '2022-01-31-preview').clientId]"
-              },
-              {
-                "name": "KV_ENDPOINT",
-                "value": "[reference(resourceId('Microsoft.KeyVault/vaults/',parameters('keyVaultName')), '2022-07-01').vaultUri]"
-              }
-            ]
-          }
-        },
-        "identity": {
-          "type": "userAssigned",
-          "userAssignedIdentities": {
-            "[variables('managedIdentityResourceId')]": {}
-          }
-        },
-        "dependsOn": [
-          "[resourceId('Microsoft.KeyVault/vaults/',parameters('keyVaultName'))]"
-        ]
-      },
-      {
-        "type": "Microsoft.KeyVault/vaults",
-        "apiVersion": "2022-07-01",
-        "name": "[parameters('keyVaultName')]",
-        "location": "[parameters('location')]",
-        "properties": {
-          "enabledForDeployment": true,
-          "enabledForDiskEncryption": true,
-          "enabledForTemplateDeployment": true,
-          "tenantId": "[subscription().tenantId]",
-          "accessPolicies": [
+  "resources": [
+    {
+      "condition": "[and(contains(parameters('services'), 'Storage'), contains(parameters('framework'), 'dotnet'))]",
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2022-03-01",
+      "name": "[parameters('webAppName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "httpsOnly": true,
+        "serverFarmId": "[resourceId(parameters('primaryRegionResourceGroupName'), 'Microsoft.Web/serverfarms', parameters('webPlanName'))]",
+        "siteConfig": {
+          "linuxFxVersion": "[parameters('linuxFxVersion')]",
+          "minTlsVersion": "1.2",
+          "appsettings": [
             {
-              "objectId": "[reference(variables('managedIdentityResourceId'), '2022-01-31-preview').principalId]",
-              "tenantId": "[subscription().tenantId]",
-              "permissions": {
-                "keys": [ "all" ],
-                "secrets": [ "all" ],
-                "certificates": [ "all" ],
-                "storage": ["all"]
-              }
+              "name": "AZURE_CLIENT_ID",
+              "value": "[reference(variables('managedIdentityResourceId'), '2022-01-31-preview').clientId]"
+            },
+            {
+              "name": "KV_ENDPOINT",
+              "value": "[reference(resourceId('Microsoft.KeyVault/vaults/',parameters('keyVaultName')), '2022-07-01').vaultUri]"
             }
-          ],
-          "sku": {
-            "name": "standard",
-            "family": "A"
-          }
+          ]
         }
       },
-      {
-        "condition": "[contains(parameters('services'), 'DevUser')]",
-        "type": "Microsoft.KeyVault/vaults/accessPolicies",
-        "name": "[concat(parameters('keyVaultName'), '/add')]",
-        "apiVersion": "2019-09-01",
-        "properties": {
-            "accessPolicies": [
-              {
-                "objectId": "[parameters('userPrincipalId')]",
-                "tenantId": "[subscription().tenantId]",
-                "permissions": {
-                  "keys": [ "all" ],
-                  "secrets": [ "all" ],
-                  "certificates": [ "all" ],
-                  "storage": ["all"]
-                }
-              }
-            ]
-        },
-        "dependsOn": [
-          "[resourceId('Microsoft.KeyVault/vaults/',parameters('keyVaultName'))]"
-        ]
+      "identity": {
+        "type": "userAssigned",
+        "userAssignedIdentities": {
+          "[variables('managedIdentityResourceId')]": {}
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults/',parameters('keyVaultName'))]"
+      ]
+    },
+    {
+      "condition": "[and(contains(parameters('services'), 'WebApp'), contains(parameters('framework'), 'django'))]",
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2022-03-01",
+      "name": "[parameters('webAppName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "httpsOnly": true,
+        "serverFarmId": "[resourceId(parameters('primaryRegionResourceGroupName'), 'Microsoft.Web/serverfarms', parameters('webPlanName'))]",
+        "siteConfig": {
+          "linuxFxVersion": "Python|3.8",
+          "pythonVersion": "3.8",
+          "minTlsVersion": "1.2",
+          "appsettings": [
+            {
+              "name": "AZURE_CLIENT_ID",
+              "value": "[reference(variables('managedIdentityResourceId'), '2022-01-31-preview').clientId]"
+            },
+            {
+              "name": "KV_ENDPOINT",
+              "value": "[reference(resourceId('Microsoft.KeyVault/vaults/',parameters('keyVaultName')), '2022-07-01').vaultUri]"
+            },
+            {
+              "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
+              "value": "true"
+            },
+            {
+              "name": "DJANGO_ENV",
+              "value": "production"
+            }
+          ]
+        }
+      },
+      "identity": {
+        "type": "userAssigned",
+        "userAssignedIdentities": {
+          "[variables('managedIdentityResourceId')]": {}
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults/',parameters('keyVaultName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults",
+      "apiVersion": "2022-07-01",
+      "name": "[parameters('keyVaultName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "enabledForDeployment": true,
+        "enabledForDiskEncryption": true,
+        "enabledForTemplateDeployment": true,
+        "tenantId": "[subscription().tenantId]",
+        "accessPolicies": [
+          {
+            "objectId": "[reference(variables('managedIdentityResourceId'), '2022-01-31-preview').principalId]",
+            "tenantId": "[subscription().tenantId]",
+            "permissions": {
+              "keys": [ "all" ],
+              "secrets": [ "all" ],
+              "certificates": [ "all" ],
+              "storage": [ "all" ]
+            }
+          }
+        ],
+        "sku": {
+          "name": "standard",
+          "family": "A"
+        }
       }
-    ]
+    },
+    {
+      "condition": "[contains(parameters('services'), 'DevUser')]",
+      "type": "Microsoft.KeyVault/vaults/accessPolicies",
+      "name": "[concat(parameters('keyVaultName'), '/add')]",
+      "apiVersion": "2019-09-01",
+      "properties": {
+        "accessPolicies": [
+          {
+            "objectId": "[parameters('userPrincipalId')]",
+            "tenantId": "[subscription().tenantId]",
+            "permissions": {
+              "keys": [ "all" ],
+              "secrets": [ "all" ],
+              "certificates": [ "all" ],
+              "storage": [ "all" ]
+            }
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults/',parameters('keyVaultName'))]"
+      ]
+    }
+  ]
   }

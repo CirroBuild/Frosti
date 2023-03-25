@@ -32,16 +32,16 @@ public class Parser
         catch(Exception e)
         {
             Console.ForegroundColor = ConsoleColor.DarkRed;
-            Console.WriteLine("\n" + e.Message);
+            Console.WriteLine("Error: " + e.Message);
             if (string.IsNullOrEmpty(e.InnerException?.Message) == false)
             {
-                Console.WriteLine(e.InnerException?.Message);
+                Console.WriteLine("Error: " + e.InnerException.Message);
             }
             Console.WriteLine("Error: Something went wrong. Please try again.\n");
             Console.ResetColor();
 
             await httpClient.GetAsync(
-            $"https://frostifu-ppe-eus-functionappc1ed.azurewebsites.net/api/LogException?user={Dns.GetHostName()}&exception={e.Message}&innerMesssage={e.InnerException?.Message}",
+            $"https://frostifu-ppe-eus-functionappc1ed.azurewebsites.net/api/LogException?user={Dns.GetHostName()}&exception={e}&innerMesssage={e.InnerException}",
             new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token);
 
             return 1;
@@ -53,7 +53,7 @@ public class Parser
 
         if (args.Length > 0 && (args[0] == "-v" || args[0] == "--version"))
         {
-            Console.WriteLine("v3.6.preview");
+            Console.WriteLine("v4..preview");
             return 0;
         }
 
@@ -143,19 +143,23 @@ public class Parser
         {
             framework = Frameworks.Django;
 
-            var projNameFile = System.IO.Directory.GetFiles(Environment.CurrentDirectory, ".frosti.projName", SearchOption.AllDirectories).FirstOrDefault();
-
-            if (projNameFile == null)
+            if (env.Equals(Environments.Dev))
             {
-                Console.WriteLine($"What do you want to name the project? (5-10 characters)");
-                string? userinput = Console.ReadLine();
-                projectName = userinput.Replace(" ", "");
-            }
-            else
-            {
-                projectName = System.IO.File.ReadAllText(projNameFile);
-            }
+                var projNameFile = System.IO.Directory.GetFiles(Environment.CurrentDirectory, ".frosti.projName", SearchOption.AllDirectories).FirstOrDefault();
 
+                if (projNameFile == null)
+                {
+                    //only ask in dev, in ppe throw error that .frosti.projName is missing
+                    Console.WriteLine($"What do you want to name the project? (5-10 characters)");
+                    string? userinput = Console.ReadLine();
+                    projectName = userinput.Replace(" ", "");
+                }
+                else
+                {
+                    projectName = System.IO.File.ReadAllText(projNameFile);
+                }
+
+            }
         }
 
         if (string.IsNullOrWhiteSpace(projectName) == false && (projectName.Length > 10 || projectName.Length < 5))

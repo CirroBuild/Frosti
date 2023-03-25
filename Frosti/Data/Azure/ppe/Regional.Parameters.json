@@ -20,6 +20,9 @@
   "linuxFxVersion": {
     "value": "__LINUXVERSION__"
   },
+  "framework": {
+    "value": "__FRAMEWORK__"
+  },
   "services": {
     "value": "__SERVICES__"
   }

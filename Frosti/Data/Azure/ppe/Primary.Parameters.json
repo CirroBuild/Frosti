@@ -44,6 +44,9 @@
   "keyVaultName": {
     "value": "__KEYVAULTNAME__"
   },
+  "framework": {
+    "value": "__FRAMEWORK__"
+  },
   "services": {
     "value": "__SERVICES__"
   }

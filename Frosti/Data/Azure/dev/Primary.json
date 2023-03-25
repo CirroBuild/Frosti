@@ -51,6 +51,9 @@
     "keyVaultName": {
       "type": "string"
     },
+    "framework": {
+      "type": "string"
+    },
     "services": {
       "type": "array"
     }
@@ -234,6 +237,18 @@
       },
       "dependsOn": [
         "[variables('managedIdentityResourceId')]"
+      ]
+    },
+    {
+      "condition": "[and(contains(parameters('services'), 'Storage'), contains(parameters('framework'), 'django'))]",
+      "name": "[concat(parameters('storageName'),'/default/', 'static')]",
+      "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+      "apiVersion": "2022-09-01",
+      "properties": {
+        "publicAccess": "Container"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Storage/storageAccounts/', parameters('storageName'))]"
       ]
     },
     {
